@@ -1,0 +1,91 @@
+#
+# Docker-Compose file to test the deployment scenario 1
+#
+version: "3.9"
+
+networks:
+  internal_bridge:
+  wireguard_network_1:
+    enable_ipv6: true
+    name: wireguard_network_1
+    driver_opts:
+      com.docker.network.enable_ipv6: "true"
+    ipam:
+      config:
+        - subnet: "172.29.0.0/28"
+          gateway: "172.29.0.1"
+        - subnet: "FD00::0:0/112"
+          gateway: "FD00::0:EEEE"
+
+  wireguard_network_2:
+    enable_ipv6: true
+    name: wireguard_network_2
+    driver_opts:
+      com.docker.network.enable_ipv6: "true"
+    ipam:
+      config:
+        - subnet: "172.29.0.16/28"
+          gateway: "172.29.0.17"
+        - subnet: "FD00::1:0/112"
+          gateway: "FD00::1:EEEE"
+
+services:
+  wireguard_hub_1:
+    image: localhost.local/wireguard-container-endpoint:test
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - "net.ipv4.ip_forward=1"
+      - "net.ipv4.conf.all.src_valid_mark=1"
+      - "net.ipv6.conf.all.forwarding=1"
+      - "net.ipv6.conf.all.disable_ipv6=0"
+    build:
+      context: ../.
+    command: sleep infinity
+    ports:
+      - 0.0.0.0:51820:51820/udp
+    networks:
+      internal_bridge:
+      wireguard_network_1:
+        ipv4_address: "172.29.0.2"
+        ipv6_address: "FD00::0:2"
+
+  nginx_demo_1:
+    image: localhost.local/nginx-hello-ipv6:latest
+    build:
+      context: ../../../resources/nginx-hello-ipv6/.
+    networks:
+      wireguard_network_1:
+        ipv4_address: "172.29.0.3"
+        ipv6_address: "FD00::0:3"
+
+  wireguard_hub_2:
+    image: localhost.local/wireguard-container-endpoint:test
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - "net.ipv4.ip_forward=1"
+      - "net.ipv4.conf.all.src_valid_mark=1"
+      - "net.ipv6.conf.all.forwarding=1"
+      - "net.ipv6.conf.all.disable_ipv6=0"
+    build:
+      context: ../.
+    command: sleep infinity
+    ports:
+      - 0.0.0.0:51821:51820/udp
+    networks:
+      internal_bridge:
+      wireguard_network_2:
+        ipv4_address: "172.29.0.18"
+        ipv6_address: "FD00::1:2"
+
+  nginx_demo_2:
+    image: localhost.local/nginx-hello-ipv6:latest
+    build:
+      context: ../../../resources/nginx-hello-ipv6/.
+    networks:
+      wireguard_network_2:
+        ipv4_address: "172.29.0.19"
+        ipv6_address: "FD00::1:19"

@@ -1,0 +1,16 @@
+.venv
+__pycache__
+.pytest_cache
+.tmp
+**/.git
+**/.gitignore
+**/.vscode
+**/coverage
+**/.env
+**/.aws
+**/.ssh
+Dockerfile
+README.md
+**/.DS_Store
+**/venv
+**/env
