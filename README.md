@@ -57,6 +57,12 @@ To run the testcases, use the following command:
 ```bash
 cd webapp
 pytest
+
+# or just rerun the last failed test cases
+pytest --lf
+
+# or use pytest watch
+ptw
 ```
 
 ## How to Build and Run a Production Container

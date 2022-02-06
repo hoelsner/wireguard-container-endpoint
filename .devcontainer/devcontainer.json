@@ -40,7 +40,8 @@
 		"hediet.vscode-drawio",
 		"exiasr.hadolint",
 		"gruntfuggly.todo-tree",
-		"alexcvzz.vscode-sqlite"
+		"alexcvzz.vscode-sqlite",
+		"njpwerner.autodocstring"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

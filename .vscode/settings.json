@@ -3,7 +3,7 @@
     "python.testing.pytestArgs": [
         "-c",
         "${workspaceFolder}/webapp/pytest.ini",
-        "webapp",
+        ".",
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
@@ -18,5 +18,6 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/webapp"
     ],
-    "python.testing.cwd": "${workspaceFolder}/webapp"
+    "python.testing.cwd": "${workspaceFolder}/webapp",
+    "autoDocstring.docstringFormat": "sphinx"
 }

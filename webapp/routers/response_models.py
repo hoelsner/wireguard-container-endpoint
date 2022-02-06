@@ -1,3 +1,4 @@
+from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 
@@ -20,5 +21,5 @@ class ValidationFailedResponseModel(BaseModel):
     """
     Model for Validation errors as defined in `app.validation_exception_handler`
     """
-    detail: dict
-    body: dict
+    detail: List
+    body: Optional[Dict]
