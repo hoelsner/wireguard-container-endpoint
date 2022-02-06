@@ -8,10 +8,12 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import tortoise
 from tortoise.exceptions import ValidationError
 
 import routers
 import utils
+import schemas
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -72,7 +74,10 @@ def create() -> FastAPI:
     register_tortoise(
         fast_api,
         db_url=config_util.db_url,
-        modules={"models": config_util.db_models},
+        modules={
+            "models": config_util.db_models
+        },
+        # TODO: generate schema only for development
         generate_schemas=True,
         add_exception_handlers=True
     )

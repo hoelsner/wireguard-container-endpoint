@@ -6,7 +6,8 @@ model classes, enums and exceptions for the rules and policy list of the applica
 from enum import Enum
 import logging
 from abc import abstractmethod
-from typing import List
+from typing import Optional
+from uuid import uuid4
 import tortoise.fields
 import tortoise.models
 import tortoise.validators
@@ -29,11 +30,29 @@ class IpTableNameEnum(str, Enum):
     FORWARD = "FORWARD"
 
 
+class PolicyRuleListModel(tortoise.models.Model):
+    """
+    Policy Rule List
+    """
+    instance_id = tortoise.fields.UUIDField(pk=True)
+    name: str = tortoise.fields.CharField(
+        max_length=32,
+        null=False
+    )
+    ipv4_filter_rules: tortoise.fields.ReverseRelation["Ipv4FilterRuleModel"]
+    ipv6_filter_rules: tortoise.fields.ReverseRelation["Ipv6FilterRuleModel"]
+    ipv4_nat_rules: tortoise.fields.ReverseRelation["Ipv4NatRuleModel"]
+    ipv6_nat_rules: tortoise.fields.ReverseRelation["Ipv6NatRuleModel"]
+
+    class Meta:
+        table = "policy_rule_list"
+
+
 class AbstractIpTableRuleModel(tortoise.models.Model):
     """
     base class for iptable rules
     """
-    instance_id = tortoise.fields.UUIDField(pk=True)
+    instance_id = tortoise.fields.UUIDField(pk=True, default=uuid4)
     _logger: logging.Logger = utils.LoggingUtil().logger
 
     def _to_iptables_rule(
@@ -145,6 +164,12 @@ class Ipv4FilterRuleModel(AbstractIpTableRuleModel):
     """
     Model for a IPv4 Filter Rule
     """
+    policy_rule_list = tortoise.fields.ForeignKeyField(
+        "models.PolicyRuleListModel",
+        related_name="ipv4_filter_rules",
+        null=True,
+        on_delete=tortoise.fields.CASCADE
+    )
     src_network = tortoise.fields.CharField(
         max_length=64,
         null=False,
@@ -222,11 +247,25 @@ class Ipv4FilterRuleModel(AbstractIpTableRuleModel):
     class Meta:
         table = "ipv4_filter_rules"
 
+    class PydanticMeta:
+        exclude = (
+            "policy_rule_list.ipv4_filter_rules",
+            "policy_rule_list.ipv6_filter_rules",
+            "policy_rule_list.ipv4_nat_rules",
+            "policy_rule_list.ipv6_nat_rules"
+        )
+
 
 class Ipv6FilterRuleModel(AbstractIpTableRuleModel):
     """
     Model for a IPv6 Filter Rule
     """
+    policy_rule_list = tortoise.fields.ForeignKeyField(
+        "models.PolicyRuleListModel",
+        related_name="ipv6_filter_rules",
+        null=True,
+        on_delete=tortoise.fields.CASCADE
+    )
     src_network = tortoise.fields.CharField(
         max_length=64,
         null=False,
@@ -302,11 +341,25 @@ class Ipv6FilterRuleModel(AbstractIpTableRuleModel):
     class Meta:
         table = "ipv6_filter_rules"
 
+    class PydanticMeta:
+        exclude = (
+            "policy_rule_list.ipv4_filter_rules",
+            "policy_rule_list.ipv6_filter_rules",
+            "policy_rule_list.ipv4_nat_rules",
+            "policy_rule_list.ipv6_nat_rules"
+        )
+
 
 class Ipv4NatRuleModel(AbstractIpTableRuleModel):
     """
     NAT rule for a defined interface (always POSTROUTING with MASQUERADE)
     """
+    policy_rule_list = tortoise.fields.ForeignKeyField(
+        "models.PolicyRuleListModel",
+        related_name="ipv4_nat_rules",
+        null=True,
+        on_delete=tortoise.fields.CASCADE
+    )
     target_interface: str = tortoise.fields.CharField(
         max_length=32,
         null=False,
@@ -344,11 +397,25 @@ class Ipv4NatRuleModel(AbstractIpTableRuleModel):
     class Meta:
         table = "ipv4_nat_rules"
 
+    class PydanticMeta:
+        exclude = (
+            "policy_rule_list.ipv4_filter_rules",
+            "policy_rule_list.ipv6_filter_rules",
+            "policy_rule_list.ipv4_nat_rules",
+            "policy_rule_list.ipv6_nat_rules"
+        )
+
 
 class Ipv6NatRuleModel(AbstractIpTableRuleModel):
     """
     NAT rule for a defined interface (always POSTROUTING with MASQUERADE)
     """
+    policy_rule_list = tortoise.fields.ForeignKeyField(
+        "models.PolicyRuleListModel",
+        related_name="ipv6_nat_rules",
+        null=True,
+        on_delete=tortoise.fields.CASCADE
+    )
     target_interface: str = tortoise.fields.CharField(
         max_length=32,
         null=False,
@@ -386,37 +453,10 @@ class Ipv6NatRuleModel(AbstractIpTableRuleModel):
     class Meta:
         table = "ipv6_nat_rules"
 
-
-class PolicyRuleList:
-    """
-    Policy Rule List
-    """
-    _policy_rules: List[AbstractIpTableRuleModel]
-
-    def __iter__(self):
-        for e in self._policy_rules:
-            yield e
-
-    def __repr__(self):
-        return "<{0} {1}>".format(self.__class__.__name__, self._policy_rules)
-
-    def __len__(self):
-        return len(self._policy_rules)
-
-    def __getitem__(self, ii):
-        return self._policy_rules[ii]
-
-    def __delitem__(self, ii):
-        del self._policy_rules[ii]
-
-    def __setitem__(self, ii, val):
-        if isinstance(val, AbstractIpTableRuleModel):
-            self._policy_rules[ii] = val
-
-        raise AttributeError("List item must be an instance of AbstractIpTableRule")
-
-    def __str__(self):
-        return str(self._policy_rules)
-
-    class Meta:
-        table = "policy_rule_list"
+    class PydanticMeta:
+        exclude = (
+            "policy_rule_list.ipv4_filter_rules",
+            "policy_rule_list.ipv6_filter_rules",
+            "policy_rule_list.ipv4_nat_rules",
+            "policy_rule_list.ipv6_nat_rules"
+        )

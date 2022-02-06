@@ -27,11 +27,11 @@ async def get_filters_ipv4():
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def create_filters_ipv4(ipv4_filter_rule: schemas.Ipv4FilterRuleSchema):
+async def create_filters_ipv4(data: schemas.Ipv4FilterRuleSchemaIn):
     """
     create new IPv4FilterRule
     """
-    obj = await models.Ipv4FilterRuleModel.create(**ipv4_filter_rule.dict(exclude_unset=True))
+    obj = await models.Ipv4FilterRuleModel.create(**data.dict(exclude_unset=True))
     return await schemas.Ipv4FilterRuleSchema.from_tortoise_orm(obj)
 
 
@@ -59,12 +59,12 @@ async def get_filter_ipv4_instance(instance_id: str):
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def update_filter_ipv4_instance(instance_id: str, ipv4_filter_rule: schemas.Ipv4FilterRuleSchema):
+async def update_filter_ipv4_instance(instance_id: str, data: schemas.Ipv4FilterRuleSchemaIn):
     """
     update existing IPv4FilterRule instance
     """
     await models.Ipv4FilterRuleModel.filter(instance_id=instance_id).update(
-        **ipv4_filter_rule.dict(exclude_unset=True)
+        **data.dict(exclude_unset=True)
     )
     return await schemas.Ipv4FilterRuleSchema.from_queryset_single(
         models.Ipv4FilterRuleModel.get(instance_id=instance_id)
@@ -104,11 +104,11 @@ async def get_filters_ipv6():
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def create_filters_ipv6(ipv6_filter_rule: schemas.Ipv6FilterRuleSchema):
+async def create_filters_ipv6(data: schemas.Ipv6FilterRuleSchemaIn):
     """
     create new Ipv6FilterRuleModel
     """
-    obj = await models.Ipv6FilterRuleModel.create(**ipv6_filter_rule.dict(exclude_unset=True))
+    obj = await models.Ipv6FilterRuleModel.create(**data.dict(exclude_unset=True))
     return await schemas.Ipv6FilterRuleSchema.from_tortoise_orm(obj)
 
 
@@ -136,12 +136,12 @@ async def get_filter_ipv6_instance(instance_id: str):
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def update_filter_ipv6_instance(instance_id: str, ipv6_filter_rule: schemas.Ipv6FilterRuleSchema):
+async def update_filter_ipv6_instance(instance_id: str, data: schemas.Ipv6FilterRuleSchemaIn):
     """
     update existing Ipv6FilterRuleModel instance
     """
     await models.Ipv6FilterRuleModel.filter(instance_id=instance_id).update(
-        **ipv6_filter_rule.dict(exclude_unset=True)
+        **data.dict(exclude_unset=True)
     )
     return await schemas.Ipv6FilterRuleSchema.from_queryset_single(
         models.Ipv6FilterRuleModel.get(instance_id=instance_id)
@@ -181,7 +181,7 @@ async def get_nat_ipv4_rules():
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def create_nat_ipv4_rule(data: schemas.Ipv4NatRuleSchema):
+async def create_nat_ipv4_rule(data: schemas.Ipv4NatRuleSchemaIn):
     """
     create new Ipv4NatRuleModel
     """
@@ -213,7 +213,7 @@ async def get_nat_ipv4_rule(instance_id: str):
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def update_nat_ipv4_rule(instance_id: str, data: schemas.Ipv4NatRuleSchema):
+async def update_nat_ipv4_rule(instance_id: str, data: schemas.Ipv4NatRuleSchemaIn):
     """
     update existing Ipv4NatRuleModel instance
     """
@@ -258,7 +258,7 @@ async def get_nat_ipv6_rules():
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def create_nat_ipv6_rule(data: schemas.Ipv6NatRuleSchema):
+async def create_nat_ipv6_rule(data: schemas.Ipv6NatRuleSchemaIn):
     """
     create new Ipv6NatRuleModel
     """
@@ -267,7 +267,7 @@ async def create_nat_ipv6_rule(data: schemas.Ipv6NatRuleSchema):
 
 
 @rules_router.get(
-    "/nar/ipv6/{instance_id}",
+    "/nat/ipv6/{instance_id}",
     response_model=schemas.Ipv6NatRuleSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel}
@@ -290,7 +290,7 @@ async def get_nat_ipv6_rule(instance_id: str):
         422: {"model": ValidationFailedResponseModel}
     }
 )
-async def update_nat_ipv6_rule(instance_id: str, data: schemas.Ipv6NatRuleSchema):
+async def update_nat_ipv6_rule(instance_id: str, data: schemas.Ipv6NatRuleSchemaIn):
     """
     update existing Ipv6NatRuleModel instance
     """
@@ -318,3 +318,81 @@ async def delete_nat_ipv6_rule(instance_id: str):
         raise HTTPException(status_code=404, detail=f"Ipv6NatRule {instance_id} not found")
 
     return MessageResponseModel(message=f"Deleted Ipv6NatRule {instance_id}")
+
+
+@rules_router.get("/policy_rule_list", response_model=List[schemas.PolicyRuleListSchema])
+async def get_policy_rule_list_entries():
+    """
+    return a list of PolicyRuleLists
+    """
+    return await schemas.PolicyRuleListSchema.from_queryset(models.PolicyRuleListModel.all())
+
+
+@rules_router.post(
+    "/policy_rule_list",
+    response_model=schemas.PolicyRuleListSchema,
+    responses={
+        422: {"model": ValidationFailedResponseModel}
+    }
+)
+async def create_policy_rule_list(data: schemas.PolicyRuleListSchemaIn):
+    """
+    create new PolicyRuleList
+    """
+    print(data.dict(exclude_unset=True))
+    obj = await models.PolicyRuleListModel.create(**data.dict(exclude_unset=True))
+    return await schemas.PolicyRuleListSchema.from_tortoise_orm(obj)
+
+
+@rules_router.get(
+    "/policy_rule_list/{instance_id}",
+    response_model=schemas.PolicyRuleListSchema,
+    responses={
+        404: {"model": InstanceNotFoundErrorResponseModel}
+    }
+)
+async def get_policy_rule_list(instance_id: str):
+    """
+    get PolicyRuleList instance
+    """
+    return await schemas.PolicyRuleListSchema.from_queryset_single(
+        models.PolicyRuleListModel.get(instance_id=instance_id)
+    )
+
+
+@rules_router.put(
+    "/policy_rule_list/{instance_id}",
+    response_model=schemas.PolicyRuleListSchema,
+    responses={
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        422: {"model": ValidationFailedResponseModel}
+    }
+)
+async def update_policy_rule_list(instance_id: str, data: schemas.PolicyRuleListSchemaIn):
+    """
+    update existing PolicyRuleList instance
+    """
+    await models.PolicyRuleListModel.filter(instance_id=instance_id).update(
+        **data.dict(exclude_unset=True)
+    )
+    return await schemas.PolicyRuleListSchema.from_queryset_single(
+        models.PolicyRuleListModel.get(instance_id=instance_id)
+    )
+
+
+@rules_router.delete(
+    "/policy_rule_list/{instance_id}",
+    response_model=MessageResponseModel,
+    responses={
+        404: {"model": InstanceNotFoundErrorResponseModel}
+    }
+)
+async def delete_policy_rule_list(instance_id: str):
+    """
+    delete PolicyRuleList instance
+    """
+    deleted_count = await models.PolicyRuleListModel.filter(instance_id=instance_id).delete()
+    if not deleted_count:
+        raise HTTPException(status_code=404, detail=f"PolicyRuleList {instance_id} not found")
+
+    return MessageResponseModel(message=f"Deleted PolicyRuleList {instance_id}")

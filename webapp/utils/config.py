@@ -40,7 +40,9 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
             )
         )
         self.db_models = [
-            "models",
+            "models.rules",
+            #"models.peer",
+            #"models.wg_interface",
             "aerich.models"
         ]
         self.api_port = int(os.environ.get("APP_PORT", "8000"))

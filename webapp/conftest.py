@@ -24,16 +24,17 @@ def test_client() -> Generator:
 
     try:
         os.remove("test.sqlite3")
-    except:
+    except:  # cov-ignore
         pass
+
 
 @pytest.fixture
 async def clean_db():
-    """clean database after running test
+    """remove all entries after running tests
     """
     yield
     await models.Ipv4FilterRuleModel.all().delete()
     await models.Ipv6FilterRuleModel.all().delete()
     await models.Ipv4NatRuleModel.all().delete()
     await models.Ipv6NatRuleModel.all().delete()
-
+    await models.PolicyRuleListModel.all().delete()
