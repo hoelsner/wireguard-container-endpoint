@@ -2,9 +2,7 @@
 # container required cap-add=NET_ADMIN and cap-add=NET_RAW to work properly
 FROM ubuntu:20.04
 
-ENV PATH="/home/appuser/.local/bin:${PATH}"
-ARG APP_VERSION=undefined
-
+ARG BUILD_VERSION=undefined
 ADD --chown=root:root https://raw.githubusercontent.com/WireGuard/wireguard-tools/v1.0.20210914/contrib/json/wg-json /bin/wg-json
 
 RUN set -x \
@@ -23,9 +21,27 @@ RUN set -x \
 	&& apt-get clean autoclean \
 	&& apt-get autoremove -y \
     && chmod 755 /bin/wg-json  \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+    && mkdir /opt/data
+
+COPY ./requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# configuration options for the container
+ENV DATA_DIR="/opt/data" \
+    APP_PORT=8000 \
+    APP_HOST=0.0.0.0 \
+    APP_VERSION="${BUILD_VERSION}" \
+    APP_CORS_ORIGIN="*" \
+    APP_CORS_METHODS="*" \
+    APP_CORS_HEADERS="*"
 
 # the container user is root, because it uses wg-quick and various other commands to
 # configure the wireguard endpoints
+COPY ./webapp /opt/webapp/
+COPY ./resources/runserver.bash /opt/runserver.bash
 
-CMD ["/bin/bash"]
+SHELL [ "/bin/bash" ]
+WORKDIR /opt/webapp/
+
+CMD ["/opt/runserver.bash"]

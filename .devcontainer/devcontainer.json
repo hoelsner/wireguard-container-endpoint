@@ -38,7 +38,9 @@
 		"piotrpalarz.vscode-gitignore-generator",
 		"yzhang.markdown-all-in-one",
 		"hediet.vscode-drawio",
-		"exiasr.hadolint"
+		"exiasr.hadolint",
+		"gruntfuggly.todo-tree",
+		"alexcvzz.vscode-sqlite"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

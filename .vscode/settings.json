@@ -1,0 +1,22 @@
+{
+    "python.pythonPath": "/usr/local/bin/python",
+    "python.testing.pytestArgs": [
+        "-c",
+        "${workspaceFolder}/webapp/pytest.ini",
+        "webapp",
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.linting.enabled": true,
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/webapp"
+    ],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    },
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/webapp"
+    ],
+    "python.testing.cwd": "${workspaceFolder}/webapp"
+}
