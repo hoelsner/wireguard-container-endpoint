@@ -27,6 +27,8 @@ RUN set -x \
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+VOLUME ["/opt/data"]
+
 # configuration options for the container
 ENV DATA_DIR="/opt/data" \
     APP_PORT=8000 \
@@ -34,7 +36,14 @@ ENV DATA_DIR="/opt/data" \
     APP_VERSION="${BUILD_VERSION}" \
     APP_CORS_ORIGIN="*" \
     APP_CORS_METHODS="*" \
-    APP_CORS_HEADERS="*"
+    APP_CORS_HEADERS="*" \
+    # unset UVICORN_SSL_KEYFILE to disable HTTPs
+    UVICORN_SSL_KEYFILE="/opt/data/ssl/privkey.pem" \
+    UVICORN_SSL_CERTFILE="/opt/data/ssl/fullchain.pem" \
+    # information for the self signed certificate
+    SELF_SIGNED_CERT_CN="example.com" \
+    # uvicorn concurrency
+    WEB_CONCURRENCY=1
 
 # the container user is root, because it uses wg-quick and various other commands to
 # configure the wireguard endpoints

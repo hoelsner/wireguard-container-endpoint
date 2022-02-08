@@ -78,7 +78,6 @@ docker build -t localhost.local/wg-container-endpoint:dev .
 docker run --rm -it \
     --cap-add=NET_ADMIN \
     --cap-add=NET_RAW \
-    -p 8000:8000 \
-    localhost.local/wg-container-endpoint:dev \
-    /bin/bash -c "uvicorn app:create --factory --host=0.0.0.0 --port=8000"
+    -p 443:8000 \
+    localhost.local/wg-container-endpoint:dev
 ```
