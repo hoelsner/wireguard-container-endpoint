@@ -20,5 +20,6 @@ RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requ
 RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g madr" 2>&1 \
     && wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64 && chmod +x /bin/hadolint
 
-ENV LOG_LEVEL="debug" \
+ENV DEBUG="True" \
+    LOG_LEVEL="debug" \
     APP_VERSION="vscode-dev"

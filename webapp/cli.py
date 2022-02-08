@@ -8,8 +8,6 @@ import uvicorn
 from functools import wraps
 from tortoise import Tortoise
 
-import utils
-
 
 @click.group()
 def cli():
@@ -37,9 +35,9 @@ def run_dev_server():
             host="0.0.0.0",
             factory=True,
             port=8000,
-            debug=True,
-            log_config=utils.LoggingUtil().log_config
+            debug=True
         )
+
     except:
         pass
 

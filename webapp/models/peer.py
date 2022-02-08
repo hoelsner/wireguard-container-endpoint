@@ -17,4 +17,4 @@ class WgPeerModel:
         """
         return a base 64 representation of the public key from the peer
         """
-        raise NotImplemented()
+        raise NotImplementedError()

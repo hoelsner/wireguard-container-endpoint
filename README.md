@@ -47,7 +47,11 @@ aerich upgrade
 To start a development server, run the following command:
 
 ```bash
+# use cli .py
 python3 cli.py run-dev-server
+
+# start development server directly
+uvicorn app:create --factory --port=8000 --debug --host="0.0.0.0"
 ```
 
 ### Run Unit-Tests
@@ -74,5 +78,7 @@ docker build -t localhost.local/wg-container-endpoint:dev .
 docker run --rm -it \
     --cap-add=NET_ADMIN \
     --cap-add=NET_RAW \
-    localhost.local/wg-container-endpoint:dev
+    -p 8000:8000 \
+    localhost.local/wg-container-endpoint:dev \
+    /bin/bash -c "uvicorn app:create --factory --host=0.0.0.0 --port=8000"
 ```

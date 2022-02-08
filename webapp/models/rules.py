@@ -6,13 +6,15 @@ model classes, enums and exceptions for the rules and policy list of the applica
 from enum import Enum
 import logging
 from abc import abstractmethod
-from typing import Optional
+from typing import List
 from uuid import uuid4
+import tortoise.query_utils
 import tortoise.fields
 import tortoise.models
+import tortoise.manager
 import tortoise.validators
-import utils
 import utils.tortoise.validators
+from utils.log import LoggingUtil
 
 
 class FilterProtocolEnum(str, Enum):
@@ -44,6 +46,89 @@ class PolicyRuleListModel(tortoise.models.Model):
     ipv4_nat_rules: tortoise.fields.ReverseRelation["Ipv4NatRuleModel"]
     ipv6_nat_rules: tortoise.fields.ReverseRelation["Ipv6NatRuleModel"]
 
+    async def to_ipv4_iptables_list(self, intf_name: str="%i", drop_rule: bool=False) -> List[str]:
+        """convert ipv4 elements from policy to list of string values containing the iptable commands
+
+        :param intf_name: name of the interface that should be used for the rule which represents the interface in the wireguard configuration, defaults to "%i"
+        :type intf_name: str, optional
+        :param drop_rule: convert iptable statement to remove the rule instead of add, defaults to False
+        :type drop_rule: bool, optional
+        :return: list of iptables commands
+        :rtype: str
+        """
+        iptable_rules = list()
+
+        await self.fetch_related(
+            "ipv4_filter_rules",
+            "ipv4_nat_rules",
+        )
+
+        for rule in self.ipv4_filter_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        for rule in self.ipv4_nat_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        return iptable_rules
+
+    async def to_ipv6_iptables_list(self, intf_name: str="%i", drop_rule: bool=False) -> List[str]:
+        """convert ipv6 elements from policy to list of string values containing the iptable commands
+
+        :param intf_name: name of the interface that should be used for the rule which represents the interface in the wireguard configuration, defaults to "%i"
+        :type intf_name: str, optional
+        :param drop_rule: convert iptable statement to remove the rule instead of add, defaults to False
+        :type drop_rule: bool, optional
+        :return: list of iptables commands
+        :rtype: str
+        """
+        iptable_rules = list()
+
+        await self.fetch_related(
+            "ipv6_filter_rules",
+            "ipv6_nat_rules",
+        )
+
+        for rule in self.ipv6_filter_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        for rule in self.ipv6_nat_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        return iptable_rules
+
+    async def to_iptables_list(self, intf_name: str="%i", drop_rule: bool=False) -> List[str]:
+        """convert policy to list of string values containing the iptable commands
+
+        :param intf_name: name of the interface that should be used for the rule which represents the interface in the wireguard configuration, defaults to "%i"
+        :type intf_name: str, optional
+        :param drop_rule: convert iptable statement to remove the rule instead of add, defaults to False
+        :type drop_rule: bool, optional
+        :return: list of iptables commands
+        :rtype: str
+        """
+        iptable_rules = list()
+
+        await self.fetch_related(
+            "ipv4_filter_rules",
+            "ipv6_filter_rules",
+            "ipv4_nat_rules",
+            "ipv6_nat_rules"
+        )
+
+        for rule in self.ipv4_filter_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        for rule in self.ipv6_filter_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        for rule in self.ipv4_nat_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        for rule in self.ipv6_nat_rules:
+            iptable_rules.append(rule.to_iptables_rule(intf_name=intf_name, drop_rule=drop_rule))
+
+        return iptable_rules
+
     class Meta:
         table = "policy_rule_list"
 
@@ -53,7 +138,7 @@ class AbstractIpTableRuleModel(tortoise.models.Model):
     base class for iptable rules
     """
     instance_id = tortoise.fields.UUIDField(pk=True, default=uuid4)
-    _logger: logging.Logger = utils.LoggingUtil().logger
+    _logger: logging.Logger = LoggingUtil().logger
 
     def _to_iptables_rule(
         self,
@@ -141,9 +226,9 @@ class AbstractIpTableRuleModel(tortoise.models.Model):
 
         :param intf_name: name of the interface that should be used for the rule which represents the interface in the wireguard configuration, defaults to "%i"
         :type intf_name: str, optional
-        :param drop_rule: [description], defaults to False
+        :param drop_rule: convert iptable statement to remove the rule instead of add, defaults to False
         :type drop_rule: bool, optional
-        :return: [description]
+        :return: iptable command representation of the model
         :rtype: str
         """
         pass

@@ -4,6 +4,7 @@ Logging Interface
 import logging
 import logging.config
 import utils.generics
+from utils.config import ConfigUtil
 
 
 class LoggingUtil(metaclass=utils.generics.SingletonMeta):
@@ -17,7 +18,7 @@ class LoggingUtil(metaclass=utils.generics.SingletonMeta):
         """
         initialize logging configuration
         """
-        config = utils.config.ConfigUtil()
+        config = ConfigUtil()
         self.log_config = {
             "version": 1,
             "formatters": {

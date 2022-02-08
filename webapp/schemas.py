@@ -5,10 +5,10 @@ from typing import Type
 import tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
 import models
-import utils
+from utils.config import ConfigUtil
 
 
-_config_instance = utils.ConfigUtil()
+_config_instance = ConfigUtil()
 tortoise.Tortoise.init_models(_config_instance.db_models, "models")
 
 PolicyRuleListSchema: Type[PydanticModel] = pydantic_model_creator(

@@ -3,7 +3,9 @@ Configuration Interface
 """
 # pylint: disable=consider-using-f-string
 import os
+import logging
 from typing import List
+import distutils.dist
 from dotenv import load_dotenv
 import utils.generics
 
@@ -22,21 +24,21 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
     cors_origin: str
     cors_methods: str
     cors_headers: str
+    debug: bool
 
     def __init__(self):
         """
         initialize the configuration util, defaults to
 
             URL: http://0.0.0.0:8000
-            DB File: ./db.sqlite3
+            DB_FILE_PATH: ./db.sqlite3
 
         """
         load_dotenv()
         self.base_data_dir = os.environ.get("DATA_DIR", ".")
         self.db_url = "sqlite://{}".format(
             os.path.join(
-                self.base_data_dir,
-                os.environ.get("DB_FILENAME", "db.sqlite3")
+                os.environ.get("DB_FILE_PATH", "./db.sqlite3")
             )
         )
         self.db_models = [
@@ -45,9 +47,10 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
             #"models.wg_interface",
             "aerich.models"
         ]
+        self.debug = distutils.dist.strtobool(os.environ.get("DEBUG", "False"))
         self.api_port = int(os.environ.get("APP_PORT", "8000"))
         self.api_host = os.environ.get("APP_HOST", "0.0.0.0")
-        self.log_level = os.environ.get("LOG_LEVEL", "info").upper()
+        self.log_level = os.environ.get("LOG_LEVEL", "debug").upper()
         self.app_version = os.environ.get("APP_VERSION", "undefined")
         self.cors_origin = os.environ.get("APP_CORS_ORIGIN", "*").split(",")
         self.cors_methods = os.environ.get("APP_CORS_METHODS", "*").split(",")

@@ -41,7 +41,8 @@
 		"exiasr.hadolint",
 		"gruntfuggly.todo-tree",
 		"alexcvzz.vscode-sqlite",
-		"njpwerner.autodocstring"
+		"njpwerner.autodocstring",
+		"ryanluker.vscode-coverage-gutters"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

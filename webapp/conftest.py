@@ -1,34 +1,31 @@
 """
 pytest fixtures
 """
-import os
 from typing import Generator
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 import models
-from app import create as create_app
+import app
 
 
-@pytest.fixture(scope="module")
-def test_client() -> Generator:
+@pytest.fixture(autouse=True)
+@pytest.mark.asyncio
+async def test_client() -> Generator:
     """
     create a test client for FastAPI
     """
     # yield test client
-    with TestClient(create_app()) as client:
+    fastapi_app = app.create()
+    async with AsyncClient(app=fastapi_app, base_url="http://test") as client:
+        # startup and shutdown events not triggered with AsyncClient - initialize it manually
+        await app.init_orm()
         yield client
-
-    print(os.environ.get("DB_FILENAME"))
-
-    try:
-        os.remove("test.sqlite3")
-    except:  # cov-ignore
-        pass
+        await app.close_orm()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def clean_db():
     """remove all entries after running tests
     """

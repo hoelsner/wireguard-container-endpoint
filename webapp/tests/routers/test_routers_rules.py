@@ -27,19 +27,19 @@ class TestIpv4FilterRuleApi:
             )
 
         # fetch through API
-        response = test_client.get(self.list_api_endpoint)
+        response = await test_client.get(self.list_api_endpoint)
         assert response.status_code == 200, response.text
         data = response.json()
         assert len(data) == 50
 
-    async def test_crud(self, test_client: TestClient):
+    async def test_crud(self, test_client: TestClient, clean_db):
         """
         test CRUD operations on API endpoint
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
 
         # create through API
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "except_src": False,
             "except_dst": False,
@@ -57,7 +57,7 @@ class TestIpv4FilterRuleApi:
         )
 
         # update through API (just change the port number)
-        response = test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
             "dst_port_number": 8444
         })
         assert response.status_code == 200, response.text
@@ -67,7 +67,7 @@ class TestIpv4FilterRuleApi:
         assert frm.dst_port_number == 8444
 
         # delete through API
-        response = test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert response.status_code == 200
         assert await models.Ipv4FilterRuleModel.all().count() == 0
 
@@ -76,7 +76,7 @@ class TestIpv4FilterRuleApi:
         test post call with invalid data
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "protocol": "tcp",
             "action": "DROP",
@@ -100,7 +100,7 @@ class TestIpv4FilterRuleApi:
         test post call with invalid data
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "protocol": "FailVal",
             "action": "DROP",
@@ -135,7 +135,7 @@ class TestIpv6FilterRuleApi:
             )
 
         # fetch through API
-        response = test_client.get(self.list_api_endpoint)
+        response = await test_client.get(self.list_api_endpoint)
         assert response.status_code == 200, response.text
         data = response.json()
         assert len(data) == 50
@@ -146,7 +146,7 @@ class TestIpv6FilterRuleApi:
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
         # create through API
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "except_src": False,
             "except_dst": False,
@@ -164,7 +164,7 @@ class TestIpv6FilterRuleApi:
         )
 
         # update through API (just change the port number)
-        response = test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
             "dst_port_number": 8444
         })
         assert response.status_code == 200, response.text
@@ -174,7 +174,7 @@ class TestIpv6FilterRuleApi:
         assert frm.dst_port_number == 8444
 
         # delete through API
-        response = test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert await models.Ipv6FilterRuleModel.all().count() == 0
 
     async def test_invalid_input_on_generic_field(self, test_client: TestClient):
@@ -182,7 +182,7 @@ class TestIpv6FilterRuleApi:
         test post call with invalid data
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "protocol": "tcp",
             "action": "DROP",
@@ -203,7 +203,7 @@ class TestIpv6FilterRuleApi:
         test post call with invalid data
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "protocol": "FailVal",
             "action": "DROP",
@@ -239,7 +239,7 @@ class TestIpv4NatRuleApi:
             )
 
         # fetch through API
-        response = test_client.get(self.list_api_endpoint)
+        response = await test_client.get(self.list_api_endpoint)
         assert response.status_code == 200, response.text
         data = response.json()
         assert len(data) == 50
@@ -250,7 +250,7 @@ class TestIpv4NatRuleApi:
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
         # create through API
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "target_interface": "eth0"
         })
@@ -263,7 +263,7 @@ class TestIpv4NatRuleApi:
         )
 
         # update through API (just change the port number)
-        response = test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
             "target_interface": "eth3"
         })
         assert response.status_code == 200, response.text
@@ -275,7 +275,7 @@ class TestIpv4NatRuleApi:
         assert obj.instance_id == prl.instance_id, "relation to parent object missing"
 
         # delete through API
-        response = test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert await models.Ipv4NatRuleModel.all().count() == 0
 
     async def test_invalid_input_on_generic_field(self, test_client: TestClient):
@@ -283,7 +283,7 @@ class TestIpv4NatRuleApi:
         test post call with invalid data
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "target_interface": "dfghevhirbviebnjbnetjbntjbnjrtenbjtrnbjrn tbgrjgn jrtbrtbtr"
         })
@@ -325,7 +325,7 @@ class TestIpv6NatRuleApi:
             )
 
         # fetch through API
-        response = test_client.get(self.list_api_endpoint)
+        response = await test_client.get(self.list_api_endpoint)
         assert response.status_code == 200, response.text
         data = response.json()
         assert len(data) == 50
@@ -336,7 +336,7 @@ class TestIpv6NatRuleApi:
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
         # create through API
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "policy_rule_list_id": str(prl.instance_id),
             "target_interface": "eth0"
         })
@@ -344,13 +344,12 @@ class TestIpv6NatRuleApi:
 
         # fetch created entry from DB
         data = response.json()
-        print(data)
         frm = await models.Ipv6NatRuleModel.get(
             instance_id=data["instance_id"]
         )
 
         # update through API (just change the port number)
-        response = test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
             "target_interface": "eth3"
         })
         assert response.status_code == 200, response.text
@@ -362,7 +361,7 @@ class TestIpv6NatRuleApi:
         assert obj.instance_id == prl.instance_id, "relation to parent object missing"
 
         # delete through API
-        response = test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert await models.Ipv6NatRuleModel.all().count() == 0
 
 
@@ -383,7 +382,7 @@ class TestPolicyRuleList:
             )
 
         # fetch through API
-        response = test_client.get(self.list_api_endpoint)
+        response = await test_client.get(self.list_api_endpoint)
         assert response.status_code == 200, response.text
         data = response.json()
         assert len(data) == 50
@@ -393,7 +392,7 @@ class TestPolicyRuleList:
         test CRUD operations on API endpoint
         """
         # create through API
-        response = test_client.post(self.list_api_endpoint, json={
+        response = await test_client.post(self.list_api_endpoint, json={
             "name": "foo"
         })
         assert response.status_code == 200, response.text
@@ -406,7 +405,7 @@ class TestPolicyRuleList:
         )
 
         # update through API (just change the port number)
-        response = test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=frm.instance_id), json={
             "name": "foo2"
         })
         assert response.status_code == 200, response.text
@@ -418,5 +417,5 @@ class TestPolicyRuleList:
         assert frm.name == "foo2"
 
         # delete through API
-        response = test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert await models.PolicyRuleListModel.all().count() == 0
