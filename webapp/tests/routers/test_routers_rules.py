@@ -32,6 +32,26 @@ class TestIpv4FilterRuleApi:
         data = response.json()
         assert len(data) == 50
 
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200, response.text
+
+        json_data = response.json()
+        assert json_data == {
+            "instance_id": data[0]["instance_id"],
+            "policy_rule_list": {
+                "instance_id": data[0]["policy_rule_list"]["instance_id"],
+                "name": "foo"
+            },
+            "src_network": "0.0.0.0/0",
+            "dst_network": "0.0.0.0/0",
+            "except_src": False,
+            "except_dst": False,
+            "protocol": "tcp",
+            "action": "DROP",
+            "table": "FORWARD",
+            "dst_port_number": 4000
+        }
+
     async def test_crud(self, test_client: TestClient, clean_db):
         """
         test CRUD operations on API endpoint
@@ -70,6 +90,11 @@ class TestIpv4FilterRuleApi:
         response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert response.status_code == 200
         assert await models.Ipv4FilterRuleModel.all().count() == 0
+
+    async def test_delete_with_invalid_id(self, test_client: TestClient):
+        """test delete with invalid id"""
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="NotExist"))
+        assert response.status_code == 404
 
     async def test_invalid_input_on_generic_field(self, test_client: TestClient):
         """
@@ -140,6 +165,11 @@ class TestIpv6FilterRuleApi:
         data = response.json()
         assert len(data) == 50
 
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200
+        resp_data = response.json()
+        assert resp_data == data[0]
+
     async def test_crud(self, test_client: TestClient, clean_db):
         """
         test CRUD operations on API endpoint
@@ -175,7 +205,13 @@ class TestIpv6FilterRuleApi:
 
         # delete through API
         response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        assert response.status_code == 200
         assert await models.Ipv6FilterRuleModel.all().count() == 0
+
+    async def test_delete_with_invalid_id(self, test_client: TestClient):
+        """test delete with invalid ID"""
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="doesntExist"))
+        assert response.status_code == 404
 
     async def test_invalid_input_on_generic_field(self, test_client: TestClient):
         """
@@ -244,6 +280,12 @@ class TestIpv4NatRuleApi:
         data = response.json()
         assert len(data) == 50
 
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200
+
+        resp_data = response.json()
+        assert resp_data == data[0]
+
     async def test_crud(self, test_client: TestClient, clean_db):
         """
         test CRUD operations on API endpoint
@@ -276,7 +318,13 @@ class TestIpv4NatRuleApi:
 
         # delete through API
         response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        assert response.status_code == 200
         assert await models.Ipv4NatRuleModel.all().count() == 0
+
+    async def test_delete_with_invalid_id(self, test_client: TestClient):
+        """test delete with invalid ID"""
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="NotExist"))
+        assert response.status_code == 404
 
     async def test_invalid_input_on_generic_field(self, test_client: TestClient):
         """
@@ -330,6 +378,12 @@ class TestIpv6NatRuleApi:
         data = response.json()
         assert len(data) == 50
 
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200
+
+        resp_data = response.json()
+        assert resp_data == data[0]
+
     async def test_crud(self, test_client: TestClient, clean_db):
         """
         test CRUD operations on API endpoint
@@ -362,7 +416,13 @@ class TestIpv6NatRuleApi:
 
         # delete through API
         response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
+        assert response.status_code == 200
         assert await models.Ipv6NatRuleModel.all().count() == 0
+
+    async def test_delete_with_invalid_id(self, test_client: TestClient):
+        """test delete with invalid id"""
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="Not Found"))
+        assert response.status_code == 404
 
 
 class TestPolicyRuleList:
@@ -384,8 +444,15 @@ class TestPolicyRuleList:
         # fetch through API
         response = await test_client.get(self.list_api_endpoint)
         assert response.status_code == 200, response.text
+
         data = response.json()
         assert len(data) == 50
+
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200
+
+        resp_data = response.json()
+        assert resp_data == data[0]
 
     async def test_crud(self, test_client: TestClient, clean_db):
         """
@@ -419,3 +486,8 @@ class TestPolicyRuleList:
         # delete through API
         response = await test_client.delete(self.detail_api_endpoint.format(instance_id=frm.instance_id))
         assert await models.PolicyRuleListModel.all().count() == 0
+
+    async def test_delete_with_invalid_id(self, test_client: TestClient):
+        """test delete with invalid id"""
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="Not Found"))
+        assert response.status_code == 404

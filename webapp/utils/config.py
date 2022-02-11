@@ -44,7 +44,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         self.db_models = [
             "models.rules",
             #"models.peer",
-            #"models.wg_interface",
+            "models.wg_interface",
             "aerich.models"
         ]
         self.debug = distutils.dist.strtobool(os.environ.get("DEBUG", "False"))

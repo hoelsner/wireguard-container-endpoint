@@ -11,7 +11,6 @@ from uuid import uuid4
 import tortoise.query_utils
 import tortoise.fields
 import tortoise.models
-import tortoise.manager
 import tortoise.validators
 import utils.tortoise.validators
 from utils.log import LoggingUtil
@@ -337,7 +336,8 @@ class Ipv4FilterRuleModel(AbstractIpTableRuleModel):
             "policy_rule_list.ipv4_filter_rules",
             "policy_rule_list.ipv6_filter_rules",
             "policy_rule_list.ipv4_nat_rules",
-            "policy_rule_list.ipv6_nat_rules"
+            "policy_rule_list.ipv6_nat_rules",
+            "policy_rule_list.bound_interfaces"
         )
 
 
@@ -431,7 +431,8 @@ class Ipv6FilterRuleModel(AbstractIpTableRuleModel):
             "policy_rule_list.ipv4_filter_rules",
             "policy_rule_list.ipv6_filter_rules",
             "policy_rule_list.ipv4_nat_rules",
-            "policy_rule_list.ipv6_nat_rules"
+            "policy_rule_list.ipv6_nat_rules",
+            "policy_rule_list.bound_interfaces"
         )
 
 
@@ -487,7 +488,8 @@ class Ipv4NatRuleModel(AbstractIpTableRuleModel):
             "policy_rule_list.ipv4_filter_rules",
             "policy_rule_list.ipv6_filter_rules",
             "policy_rule_list.ipv4_nat_rules",
-            "policy_rule_list.ipv6_nat_rules"
+            "policy_rule_list.ipv6_nat_rules",
+            "policy_rule_list.bound_interfaces"
         )
 
 
@@ -543,5 +545,6 @@ class Ipv6NatRuleModel(AbstractIpTableRuleModel):
             "policy_rule_list.ipv4_filter_rules",
             "policy_rule_list.ipv6_filter_rules",
             "policy_rule_list.ipv4_nat_rules",
-            "policy_rule_list.ipv6_nat_rules"
+            "policy_rule_list.ipv6_nat_rules",
+            "policy_rule_list.bound_interfaces"
         )

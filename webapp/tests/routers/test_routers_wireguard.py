@@ -1,0 +1,104 @@
+"""
+test rules API endpoints
+"""
+import pytest
+from fastapi.testclient import TestClient
+
+import models
+
+
+class TestWgInterfaceApi:
+    """
+    Test WgInterfaceModel API
+    """
+    list_api_endpoint = "/api/wg/interfaces"
+    detail_api_endpoint = "/api/wg/interfaces/{instance_id}"
+
+    async def test_get_endpoint(self, test_client: TestClient, clean_db):
+        """
+        get WgInterface API endpoint
+        """
+        for e in range(1, 10):
+            await models.WgInterfaceModel.create(
+                intf_name=f"wg{e}",
+                listen_port=51820+e,
+                cidr_addresses=f"192.168.1.{e}/32",
+                private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+            )
+
+        # fetch through API
+        response = await test_client.get(self.list_api_endpoint)
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert len(data) == 9
+
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200, response.text
+
+        json_data = response.json()
+        assert json_data == data[0]
+
+    async def test_crud(self, test_client: TestClient, clean_db):
+        """
+        test CRUD operations on API endpoint
+        """
+        # create through API
+        response = await test_client.post(self.list_api_endpoint, json={
+            "intf_name": "wgvpn1",
+            "cidr_addresses": "192.168.1.1/32",
+            "private_key": "cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        })
+        assert response.status_code == 200, response.text
+
+        # fetch created entry from DB
+        data = response.json()
+        wim = await models.WgInterfaceModel.get(
+            instance_id=data["instance_id"]
+        )
+
+        # update through API (just change the port number)
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=data["instance_id"]), json={
+            "intf_name": "wgvpn1",
+            "cidr_addresses": "192.168.1.1/32",
+            "private_key": "cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI=",
+            "listen_port": 51830
+        })
+        assert response.status_code == 200, response.text
+        wim = await models.WgInterfaceModel.get(
+            instance_id=data["instance_id"]
+        )
+        assert wim.listen_port == 51830
+
+        # delete through API
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=data["instance_id"]))
+        assert response.status_code == 200
+        assert await models.WgInterfaceModel.all().count() == 0
+
+    async def test_delete_with_invalid_id(self, test_client: TestClient):
+        """test delete with invalid id"""
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="NotExist"))
+        assert response.status_code == 404
+
+    async def test_invalid_input_on_generic_field(self, test_client: TestClient):
+        """
+        test post call with invalid data
+        """
+        response = await test_client.post(self.list_api_endpoint, json={
+            "intf_name": "wgvpn1",
+            "cidr_addresses": "192.168.1.1/32",
+            "listen_port": 98765432345678,
+            "private_key": "cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        })
+        assert response.status_code == 422, response.text
+
+        data = response.json()
+        assert data["detail"] == [
+            {
+                "ctx": {"limit_value": 2147483647},
+                "loc": ["body",
+                        "listen_port"],
+                "msg": "ensure this value is less than or equal to 2147483647",
+                "type": "value_error.number.not_le"
+            }
+        ]

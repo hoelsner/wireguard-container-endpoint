@@ -1,5 +1,7 @@
 [run]
-omit = **/__main__.py
+omit =
+    **/__main__.py
+    cli.py
 
 [report]
 exclude_lines =

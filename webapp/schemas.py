@@ -1,8 +1,9 @@
 """
 pydantic schemas to build the bridge between the router and the models
 """
-from typing import Type
+from typing import Type, Optional
 import tortoise
+from pydantic import BaseModel, constr
 from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
 import models
 from utils.config import ConfigUtil
@@ -64,5 +65,15 @@ Ipv6NatRuleSchema: Type[PydanticModel] = pydantic_model_creator(
 Ipv6NatRuleSchemaIn: Type[PydanticModel] = pydantic_model_creator(
     models.Ipv6NatRuleModel,
     name="Ipv6NatRuleSchemaIn",
+    exclude_readonly=True
+)
+
+WgInterfaceSchema: Type[PydanticModel] = pydantic_model_creator(
+    models.WgInterfaceModel,
+    name="WgInterfaceSchema"
+)
+WgInterfaceSchemaIn: Type[PydanticModel] = pydantic_model_creator(
+    models.WgInterfaceModel,
+    name="WgInterfaceSchemaIn",
     exclude_readonly=True
 )

@@ -42,7 +42,9 @@
 		"gruntfuggly.todo-tree",
 		"alexcvzz.vscode-sqlite",
 		"njpwerner.autodocstring",
-		"ryanluker.vscode-coverage-gutters"
+		"ryanluker.vscode-coverage-gutters",
+		"mtxr.sqltools",
+		"mtxr.sqltools-driver-sqlite"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

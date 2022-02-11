@@ -10,6 +10,7 @@ class WgPeerModel:
     description: str
     persistent_keepalives: int      # optional
     preshared_key: str              # optional
+    endpoint: str
     cidr_routes: List[str]
 
     @property

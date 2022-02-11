@@ -190,7 +190,7 @@ async def create_nat_ipv4_rule(data: schemas.Ipv4NatRuleSchemaIn):
 
 
 @rules_router.get(
-    "/nar/ipv4/{instance_id}",
+    "/nat/ipv4/{instance_id}",
     response_model=schemas.Ipv4NatRuleSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel}

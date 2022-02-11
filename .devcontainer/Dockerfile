@@ -14,7 +14,8 @@ COPY requirements.txt /tmp/pip-tmp/
 RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements_dev.txt \
     && rm -rf /tmp/pip-tmp \
     && apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends sqlite3
+    && apt-get -y install --no-install-recommends sqlite3 wireguard wireguard-tools \
+    && chmod 755 /bin/wg-json
 
 # [Optional] Uncomment this line to install global node packages.
 RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g madr" 2>&1 \
@@ -23,3 +24,5 @@ RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g madr" 2>&
 ENV DEBUG="True" \
     LOG_LEVEL="debug" \
     APP_VERSION="vscode-dev"
+
+ADD --chown=root:root https://raw.githubusercontent.com/WireGuard/wireguard-tools/v1.0.20210914/contrib/json/wg-json /bin/wg-json

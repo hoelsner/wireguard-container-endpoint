@@ -5,3 +5,4 @@ wgconfig==0.2.2
 tortoise-orm==0.18.1
 click==8.0.3
 aerich==0.6.2
+wgconfig==0.2.2

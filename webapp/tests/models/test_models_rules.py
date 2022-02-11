@@ -32,14 +32,6 @@ class TestIpv4FilterRuleModel:
         exp_rule = "iptable -D FORWARD -i %i -p tcp -dport 3000 -j DROP"
         assert frm.to_iptables_rule(drop_rule=True) == exp_rule
 
-        # fetch through API
-        response = await test_client.get("/api/rules/filters/ipv4")
-        assert response.status_code == 200, response.text
-
-        data = response.json()
-        assert len(data) == 1, data
-        assert data[0]["instance_id"] == str(frm.instance_id), response.text
-
     async def test_rule_with_ip_addresses(self, test_client: TestClient, clean_db):
         """test rule with IPv4 network filter
         """

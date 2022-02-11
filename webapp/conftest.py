@@ -35,3 +35,4 @@ async def clean_db():
     await models.Ipv4NatRuleModel.all().delete()
     await models.Ipv6NatRuleModel.all().delete()
     await models.PolicyRuleListModel.all().delete()
+    await models.WgInterfaceModel.all().delete()

@@ -124,6 +124,7 @@ def create() -> FastAPI:
     # include routers
     fast_api.include_router(routers.healthcheck_router, prefix="/api/healthcheck", tags=["healthcheck"])
     fast_api.include_router(routers.rules_router, prefix="/api/rules", tags=["rules"])
+    fast_api.include_router(routers.wireguard_router, prefix="/api/wg", tags=["rules"])
 
     log_util.logger.info("finished API application")
     return fast_api

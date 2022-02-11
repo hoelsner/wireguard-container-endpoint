@@ -2,7 +2,7 @@
 
 This project contains the code for a Container that provides access to a Wireguard VPN for local containers and single networks (see [scenarios.md](./docs/scenarios.md) for target Use-Cases/Scenarios).
 
-## TODOs
+## TO-DO
 
 * [ ] Docker based Wireguard VPN Hub/Endpoint that supports configuration via an a HTTP API (basic authentication with username and password)
 * [ ] route to another Wireguard Endpoint (Hub-Topology) within the Wireguard VPN
@@ -12,7 +12,7 @@ This project contains the code for a Container that provides access to a Wiregua
 
 ## How to use
 
-TODO:
+TODO: add how to use section
 
 The API to configure the Wireguard Interfaces is exposed at `/api` and the swagger documentation is available at `/docs`.
 
