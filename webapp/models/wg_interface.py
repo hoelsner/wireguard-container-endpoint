@@ -5,11 +5,10 @@ model classes for the wireguard interface
 # pylint: disable=too-few-public-methods
 import re
 from enum import Enum
-from typing import List, Optional, Iterable, Any
+from typing import List
 import tortoise.fields
 import tortoise.models
 import tortoise.validators
-from tortoise.backends.base.client import BaseDBAsyncClient
 import wgconfig.wgexec
 
 import utils.regex
@@ -21,15 +20,6 @@ class WgInterfaceTableEnum(str, Enum):
     """
     OFF = "off"
     AUTO = "auto"
-
-
-def generate_private_key() -> str:
-    """generate a random private key to use as default on a WG interface
-
-    :return: [description]
-    :rtype: [type]
-    """
-    return wgconfig.wgexec.generate_privatekey()
 
 
 class WgInterfaceModel(tortoise.models.Model):
