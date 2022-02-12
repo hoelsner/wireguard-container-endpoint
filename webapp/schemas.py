@@ -77,3 +77,13 @@ WgInterfaceSchemaIn: Type[PydanticModel] = pydantic_model_creator(
     name="WgInterfaceSchemaIn",
     exclude_readonly=True
 )
+
+WgPeerSchema: Type[PydanticModel] = pydantic_model_creator(
+    models.WgPeerModel,
+    name="WgPeerSchema"
+)
+WgPeerSchemaIn: Type[PydanticModel] = pydantic_model_creator(
+    models.WgPeerModel,
+    name="WgPeerSchemaIn",
+    exclude_readonly=True
+)

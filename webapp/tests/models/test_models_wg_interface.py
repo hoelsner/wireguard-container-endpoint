@@ -1,7 +1,6 @@
 """
 test models.wg_interface module
 """
-from sqlite3 import IntegrityError
 import pytest
 
 from fastapi.testclient import TestClient

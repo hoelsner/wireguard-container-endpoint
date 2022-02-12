@@ -50,3 +50,18 @@ class CustomRegexValidator(Validator):
 
         if not self.regex.match(value):
             raise ValidationError(f"Value '{value}' does not match regex '{self.regex.pattern}'")
+
+
+class RegexOrNoneValidator(Validator):
+    """
+    Validator that verifies a value if it matches a regular expression or is null
+    """
+
+    def __init__(self, pattern: str, flags: Union[int, re.RegexFlag]):
+        self.regex = re.compile(pattern, flags)
+        self.pattern = pattern
+
+    def __call__(self, value: Any):
+        if value is not None:
+            if not self.regex.match(value):
+                raise ValidationError(f"Value '{value}' does not match regex '{self.regex.pattern}'")

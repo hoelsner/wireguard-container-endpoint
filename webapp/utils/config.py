@@ -46,7 +46,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         )
         self.db_models = [
             "models.rules",
-            #"models.peer",
+            "models.peer",
             "models.wg_interface",
             "aerich.models"
         ]

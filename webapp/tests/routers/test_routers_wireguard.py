@@ -102,3 +102,102 @@ class TestWgInterfaceApi:
                 "type": "value_error.number.not_le"
             }
         ]
+
+
+class TestWgPeerApi:
+    """
+    Test WgPeer API endpoints
+    """
+    list_api_endpoint = "/api/wg/interface/peers"
+    detail_api_endpoint = "/api/wg/interface/peers/{instance_id}"
+
+    async def test_get_peers(self, test_client: TestClient, clean_db):
+        """
+        get peer list
+        """
+        wgintf = await models.WgInterfaceModel.create(
+            intf_name="wg1",
+            cidr_addresses="10.1.1.1/24",
+            private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        )
+
+        peer = await models.WgPeerModel.create(
+            wg_interface=wgintf,
+            public_key="6Prv1yQ2Fh99Xhi4eUmPZnGox0VrLH88MFtdNXfM52E=",
+            cidr_routes="10.1.1.3/32"
+        )
+
+        # fetch list through API
+        response = await test_client.get(self.list_api_endpoint)
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert len(data) == 1
+
+        # test get peer
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=data[0]["instance_id"]))
+        assert response.status_code == 200, response.text
+
+        json_data = response.json()
+        assert json_data == data[0]
+
+    async def test_create_update_peer(self, test_client: TestClient, clean_db):
+        """test create on API endpoint
+        """
+        wgintf = await models.WgInterfaceModel.create(
+            intf_name="wg1",
+            cidr_addresses="10.1.1.1/24",
+            private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        )
+        response = await test_client.post(self.list_api_endpoint, json={
+            "cidr_routes": "10.1.1.3/32",
+            "public_key": "cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI=",
+            "endpoint": "1.1.1.1:51820",
+            "wg_interface_id": str(wgintf.instance_id)
+        })
+        assert response.status_code == 200, response.text
+
+        # fetch created entry from DB
+        data = response.json()
+        obj = await models.WgPeerModel.get(
+            instance_id=data["instance_id"]
+        )
+        await obj.fetch_related("wg_interface")
+        assert obj.wg_interface.instance_id == wgintf.instance_id
+
+        # update entry
+        response = await test_client.put(self.detail_api_endpoint.format(instance_id=data["instance_id"]), json={
+            "public_key": "cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI=",
+            "cidr_routes": "10.1.1.3/32",
+            "endpoint": "2.2.2.2:51820",
+            "wg_interface_id": str(wgintf.instance_id)
+        })
+        assert response.status_code == 200, response.text
+        obj = await models.WgPeerModel.get(
+            instance_id=data["instance_id"]
+        )
+        assert obj.endpoint == "2.2.2.2:51820"
+
+    async def test_delete_peer(self, test_client: TestClient, clean_db):
+        """test delete of peer
+        """
+        wgintf = await models.WgInterfaceModel.create(
+            intf_name="wg1",
+            cidr_addresses="10.1.1.1/24",
+            private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        )
+        peer = await models.WgPeerModel.create(
+            wg_interface=wgintf,
+            public_key="6Prv1yQ2Fh99Xhi4eUmPZnGox0VrLH88MFtdNXfM52E=",
+            cidr_routes="10.1.1.3/32"
+        )
+
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id=peer.instance_id))
+        assert response.status_code == 200
+        assert await models.WgPeerModel.all().count() == 0
+
+    async def test_delete_peer_with_invalid_id(self, test_client: TestClient, clean_db):
+        """test delete with invlaid ID
+        """
+        response = await test_client.delete(self.detail_api_endpoint.format(instance_id="IdNotFound"))
+        assert response.status_code == 404
