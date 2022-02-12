@@ -3,9 +3,21 @@ FastAPI router for common utilities
 """
 import fastapi
 import utils.wireguard
+import utils.config
 
 
 utility_router = fastapi.APIRouter()
+
+
+@utility_router.get("/instance/info")
+def get_instance_info():
+    """return certin information about the application instance
+    """
+    config = utils.config.ConfigUtil()
+    return {
+        "version": config.app_version,
+        "debug": config.debug
+    }
 
 
 @utility_router.post("/wg/generate/privkey")

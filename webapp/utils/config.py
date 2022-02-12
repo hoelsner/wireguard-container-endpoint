@@ -3,9 +3,7 @@ Configuration Interface
 """
 # pylint: disable=consider-using-f-string
 import os
-import logging
 from typing import List
-import distutils.dist
 from dotenv import load_dotenv
 import utils.generics
 
@@ -35,6 +33,11 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
 
         """
         load_dotenv()
+        self.refresh_config()
+
+    def refresh_config(self):
+        """refresh configuration instance with current environment data
+        """
         self.base_data_dir = os.environ.get("DATA_DIR", ".")
         self.db_url = "sqlite://{}".format(
             os.path.join(
@@ -47,7 +50,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
             "models.wg_interface",
             "aerich.models"
         ]
-        self.debug = distutils.dist.strtobool(os.environ.get("DEBUG", "False"))
+        self.debug = ConfigUtil.str_to_bool(os.environ.get("DEBUG", "False"))
         self.api_port = int(os.environ.get("APP_PORT", "8000"))
         self.api_host = os.environ.get("APP_HOST", "0.0.0.0")
         self.log_level = os.environ.get("LOG_LEVEL", "debug").upper()
@@ -55,6 +58,12 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         self.cors_origin = os.environ.get("APP_CORS_ORIGIN", "*").split(",")
         self.cors_methods = os.environ.get("APP_CORS_METHODS", "*").split(",")
         self.cors_headers = os.environ.get("APP_CORS_HEADERS", "*").split(",")
+
+    @staticmethod
+    def str_to_bool(value: str) -> bool:
+        """convert string to bool"""
+        true_values = ["true", "1", "yes"]
+        return True if value.lower() in true_values else False
 
 
 # required for aerich migrations
