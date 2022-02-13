@@ -1,11 +1,14 @@
 """
 pydantic schemas to build the bridge between the router and the models
 """
-from typing import Type, Optional
+from typing import Type
+
 import tortoise
-from pydantic import BaseModel, constr
 from tortoise.contrib.pydantic import pydantic_model_creator, PydanticModel
-import models
+
+from models.wg_interface import WgInterfaceModel
+from models.peer import WgPeerModel
+from models.rules import PolicyRuleListModel, Ipv4FilterRuleModel, Ipv6FilterRuleModel, Ipv4NatRuleModel, Ipv6NatRuleModel
 from utils.config import ConfigUtil
 
 
@@ -13,11 +16,11 @@ _config_instance = ConfigUtil()
 tortoise.Tortoise.init_models(_config_instance.db_models, "models")
 
 PolicyRuleListSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.PolicyRuleListModel,
+    PolicyRuleListModel,
     name="PolicyRuleListSchema"
 )
 PolicyRuleListSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.PolicyRuleListModel,
+    PolicyRuleListModel,
     name="PolicyRuleListSchemaIn",
     exclude_readonly=True,
     exclude=(
@@ -29,61 +32,61 @@ PolicyRuleListSchemaIn: Type[PydanticModel] = pydantic_model_creator(
 )
 
 Ipv4FilterRuleSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv4FilterRuleModel,
+    Ipv4FilterRuleModel,
     name="Ipv4FilterRuleSchema"
 )
 Ipv4FilterRuleSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv4FilterRuleModel,
+    Ipv4FilterRuleModel,
     name="Ipv4FilterRuleModelIn",
     exclude_readonly=True
 )
 
 Ipv6FilterRuleSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv6FilterRuleModel,
+    Ipv6FilterRuleModel,
     name="Ipv6FilterRuleSchema"
 )
 Ipv6FilterRuleSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv6FilterRuleModel,
+    Ipv6FilterRuleModel,
     name="Ipv6FilterRuleSchemaIn",
     exclude_readonly=True
 )
 
 Ipv4NatRuleSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv4NatRuleModel,
+    Ipv4NatRuleModel,
     name="Ipv4NatRuleSchema"
 )
 Ipv4NatRuleSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv4NatRuleModel,
+    Ipv4NatRuleModel,
     name="Ipv4NatRuleSchemaIn",
     exclude_readonly=True
 )
 
 Ipv6NatRuleSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv6NatRuleModel,
+    Ipv6NatRuleModel,
     name="Ipv6NatRuleSchema"
 )
 Ipv6NatRuleSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.Ipv6NatRuleModel,
+    Ipv6NatRuleModel,
     name="Ipv6NatRuleSchemaIn",
     exclude_readonly=True
 )
 
 WgInterfaceSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.WgInterfaceModel,
+    WgInterfaceModel,
     name="WgInterfaceSchema"
 )
 WgInterfaceSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.WgInterfaceModel,
+    WgInterfaceModel,
     name="WgInterfaceSchemaIn",
     exclude_readonly=True
 )
 
 WgPeerSchema: Type[PydanticModel] = pydantic_model_creator(
-    models.WgPeerModel,
+    WgPeerModel,
     name="WgPeerSchema"
 )
 WgPeerSchemaIn: Type[PydanticModel] = pydantic_model_creator(
-    models.WgPeerModel,
+    WgPeerModel,
     name="WgPeerSchemaIn",
     exclude_readonly=True
 )

@@ -32,4 +32,6 @@ async def healthcheck():
         logger.error(f"Unable to generate keys for wireguard: {ex}")
         raise HTTPException(status_code=500, detail="healthcheck for wireguard failed")
 
+    # TODO: verify permissions on the data directories
+
     return MessageResponseModel(message="ok")

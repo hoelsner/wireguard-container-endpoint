@@ -31,7 +31,7 @@ def run_dev_server():
     """
     try:
         uvicorn.run(
-            "app:create",
+            "app.fast_api:create",
             host="0.0.0.0",
             factory=True,
             port=8000,

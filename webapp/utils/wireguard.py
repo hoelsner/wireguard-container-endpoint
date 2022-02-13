@@ -1,3 +1,6 @@
+"""
+shared utilities for wireguard
+"""
 import wgconfig.wgexec
 
 import utils.generics

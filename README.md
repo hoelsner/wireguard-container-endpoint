@@ -51,7 +51,7 @@ To start a development server, run the following command:
 python3 cli.py run-dev-server
 
 # start development server directly
-uvicorn app:create --factory --port=8000 --debug --host="0.0.0.0"
+uvicorn app.fast_api:create --factory --port=8000 --debug --host="0.0.0.0"
 ```
 
 ### Run Unit-Tests

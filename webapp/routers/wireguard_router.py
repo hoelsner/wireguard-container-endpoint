@@ -2,11 +2,14 @@
 FastAPI router for wg interface model
 """
 from typing import List
+
 import fastapi
 from fastapi import HTTPException
-import schemas
+
+import app.wg
 import models
-from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel,ValidationFailedResponseModel
+import schemas
+from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel, ValidationFailedResponseModel
 
 
 wireguard_router = fastapi.APIRouter()
@@ -49,6 +52,22 @@ async def get_wg_interface(instance_id: str):
     return await schemas.WgInterfaceSchema.from_queryset_single(
         models.WgInterfaceModel.get(instance_id=instance_id)
     )
+
+
+@wireguard_router.post(
+    "/interfaces/{instance_id}/config/apply",
+    response_model=schemas.WgInterfaceSchema,
+    responses={
+        404: {"model": InstanceNotFoundErrorResponseModel}
+    }
+)
+async def get_wg_interface(instance_id: str):
+    """
+    force apply interface configuration at system level (will temporary disrupt the wireguard connectivity)
+    """
+    instance = models.WgInterfaceModel.get(instance_id=instance_id)
+    app.wg.WgConfigAdapter(wg_interface=instance).update_interface_config()
+    return MessageResponseModel(message="configuration applied")
 
 
 @wireguard_router.put(

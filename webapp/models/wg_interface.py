@@ -5,14 +5,19 @@ model classes for the wireguard interface
 # pylint: disable=too-few-public-methods
 import re
 from enum import Enum
-from typing import List
+from typing import List, Optional, Type
+
 import tortoise.fields
 import tortoise.models
 import tortoise.validators
+import tortoise.signals
 import wgconfig.wgexec
 
+import app.wg
 import utils.regex
 import utils.tortoise.validators
+import models.rules
+import models.peer
 
 
 class WgInterfaceTableEnum(str, Enum):
@@ -37,7 +42,7 @@ class WgInterfaceModel(tortoise.models.Model):
         ],
         description="wireguard interface name"
     )
-    policy_rule_list = tortoise.fields.ForeignKeyField(
+    policy_rule_list: models.rules.PolicyRuleListModel = tortoise.fields.ForeignKeyField(
         "models.PolicyRuleListModel",
         related_name="bound_interfaces",
         null=True,
@@ -48,6 +53,9 @@ class WgInterfaceModel(tortoise.models.Model):
         max_length=2048,
         default="",
         null=True,
+        validators=[
+            utils.tortoise.validators.RegexOrNoneValidator("^[a-zA-Z0-9_]*$", re.I)
+        ],
         description="description within the wireguard configuration"
     )
     listen_port: int = tortoise.fields.IntField(
@@ -80,6 +88,7 @@ class WgInterfaceModel(tortoise.models.Model):
         ],
         description="comma separated list of IPv4/IPv6 addresses that are used on the wireguard interface"
     )
+    peers: tortoise.fields.ReverseRelation["WgPeerModel"]
 
     @property
     def cidr_addresses_list(self) -> List:
@@ -111,3 +120,25 @@ class WgInterfaceModel(tortoise.models.Model):
 
     class Meta:
         table = "wg_interfaces"
+
+
+@tortoise.signals.post_save(WgInterfaceModel)
+async def wginterfacemodel_pre_save(
+    sender: "Type[WgInterfaceModel]",
+    instance: WgInterfaceModel,
+    created: bool,
+    using_db: "Optional[BaseDBAsyncClient]",
+    update_fields: List[str],
+) -> None:
+    """trigger sync with wgconfig"""
+    await app.wg.WgConfigAdapter(wg_interface=instance).update_interface_config()
+
+
+@tortoise.signals.post_delete(WgInterfaceModel)
+async def wginterfacemodel_pre_delete(
+    sender: "Type[WgInterfaceModel]",
+    instance: WgInterfaceModel,
+    using_db: "Optional[BaseDBAsyncClient]"
+) -> None:
+    """trigger sync with wgconfig"""
+    await app.wg.WgConfigAdapter(wg_interface=instance).update_interface_config()

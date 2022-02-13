@@ -2,15 +2,16 @@
 Start the Wireguard Container Endpoint (WGCE)
 """
 import tortoise
+from tortoise.exceptions import ValidationError,  DoesNotExist, IntegrityError
 from fastapi import FastAPI, status, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from tortoise.exceptions import ValidationError,  DoesNotExist, IntegrityError
 
-import routers.healthcheck_router
-import routers.rules_router
+import app.wg
+import models
+import routers
 from utils.config import ConfigUtil
 from utils.log import LoggingUtil
 
@@ -55,14 +56,16 @@ async def tortoise_integrityerror_exception_handler(request: Request, exc: Integ
     )
 
 
-async def init_orm() -> None:
-    """initialize tortoise ORM for FastAPI and generate schema initially if no tables are stored in the
-    database
+async def startup_app() -> None:
+    """start app
     """
     config_util = ConfigUtil()
     logger = LoggingUtil().logger
 
-    tortoise.Tortoise.init_models(config_util.db_models, "models")
+    # ORM initialize
+    tortoise.Tortoise.init_models(
+        config_util.db_models, "models"
+    )
     await tortoise.Tortoise.init(
         db_url=config_util.db_url,
         modules={
@@ -75,10 +78,21 @@ async def init_orm() -> None:
     logger.info("ORM generating schema")
     await tortoise.Tortoise.generate_schemas(safe=True)
 
+    # WgInterface startup
+    for wgintf in await models.WgInterfaceModel.all():
+        instance = app.wg.WgConfigAdapter(wg_interface=wgintf)
+        await instance.recreate_config()
 
-async def close_orm() -> None:
-    """close Tortoise ORM
+
+async def shutdown_app() -> None:
+    """close app
     """
+    # WgInterface startup
+    for wgintf in await models.WgInterfaceModel.all():
+        instance = app.wg.WgConfigAdapter(wg_interface=wgintf)
+        await instance.interface_down()
+
+    # ORM shutdown
     logger = LoggingUtil().logger
     await tortoise.Tortoise.close_connections()
     logger.info("ORM shutdown")
@@ -118,13 +132,13 @@ def create() -> FastAPI:
     fast_api.add_exception_handler(IntegrityError, tortoise_integrityerror_exception_handler)
 
     # register event handler
-    fast_api.add_event_handler("startup", init_orm)
-    fast_api.add_event_handler("shutdown", close_orm)
+    fast_api.add_event_handler("startup", startup_app)
+    fast_api.add_event_handler("shutdown", shutdown_app)
 
     # include routers
     fast_api.include_router(routers.healthcheck_router, prefix="/api/healthcheck", tags=["healthcheck"])
-    fast_api.include_router(routers.rules_router, prefix="/api/rules", tags=["config"])
-    fast_api.include_router(routers.wireguard_router, prefix="/api/wg", tags=["config"])
+    fast_api.include_router(routers.rules_router, prefix="/api/rules", tags=["rules"])
+    fast_api.include_router(routers.wireguard_router, prefix="/api/wg", tags=["wireguard"])
     fast_api.include_router(routers.utility_router, prefix="/api/utils", tags=["utils"])
 
     log_util.logger.info("finished API application")

@@ -35,7 +35,7 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
     json_data = response.json()
     assert json_data == {
         "version": cu.app_version,
-        "debug": False
+        "debug": cu.debug
     }
 
     # test with different app version
@@ -49,6 +49,6 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
         json_data = response.json()
         assert json_data == {
             "version": "MockedVersion",
-            "debug": False
+            "debug": cu.debug
         }
         m.setenv("APP_VERSION", old_value)

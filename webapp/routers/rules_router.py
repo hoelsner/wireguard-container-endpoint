@@ -4,8 +4,8 @@ FastAPI router for rules model
 from typing import List
 import fastapi
 from fastapi import HTTPException
-import schemas
 import models
+import schemas
 from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel,ValidationFailedResponseModel
 
 

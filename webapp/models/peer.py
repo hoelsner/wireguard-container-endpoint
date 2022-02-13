@@ -1,11 +1,13 @@
 # pylint: disable=missing-class-docstring
 import re
-from typing import List
+from typing import List, Optional, Type
 
 import tortoise.fields
 import tortoise.validators
 import tortoise.models
+from tortoise import BaseDBAsyncClient
 
+import app.wg
 import utils.regex
 import utils.tortoise.validators
 
@@ -92,3 +94,27 @@ class WgPeerModel(tortoise.models.Model):
 
     class Meta:
         table = "wg_peers"
+
+
+@tortoise.signals.post_save(WgPeerModel)
+async def wgpeermodel_pre_save(
+    sender: "Type[WgPeerModel]",
+    instance: WgPeerModel,
+    created: bool,
+    using_db: "Optional[BaseDBAsyncClient]",
+    update_fields: List[str],
+) -> None:
+    """trigger sync with wgconfig"""
+    await instance.fetch_related("wg_interface")
+    await app.wg.WgConfigAdapter(wg_interface=instance.wg_interface).update_peer_config()
+
+
+@tortoise.signals.post_delete(WgPeerModel)
+async def wgpeermodel_pre_delete(
+    sender: "Type[WgPeerModel]",
+    instance: WgPeerModel,
+    using_db: "Optional[BaseDBAsyncClient]"
+) -> None:
+    """trigger sync with wgconfig"""
+    await instance.fetch_related("wg_interface")
+    await app.wg.WgConfigAdapter(wg_interface=instance.wg_interface).update_peer_config()

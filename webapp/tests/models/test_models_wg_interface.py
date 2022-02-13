@@ -21,7 +21,7 @@ class TestWgInterfaceModel():
             private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
         )
         assert obj.listen_port == 51820
-        assert await obj.policy_rule_list is None
+        assert obj.policy_rule_list is None
         assert obj.description == ""
         assert obj.private_key is not None, "a random key is generated"
         assert obj.table == models.WgInterfaceTableEnum.AUTO
@@ -33,8 +33,9 @@ class TestWgInterfaceModel():
             cidr_addresses="10.1.1.1/24",
             private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
         )
+        await obj.fetch_related("policy_rule_list")
         assert obj.listen_port == 51820
-        assert await obj.policy_rule_list is None
+        assert obj.policy_rule_list is None
         assert obj.description == ""
         assert obj.private_key is not None, "a random key is generated"
         assert obj.table == models.WgInterfaceTableEnum.AUTO

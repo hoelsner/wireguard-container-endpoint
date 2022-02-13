@@ -23,6 +23,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
     cors_methods: str
     cors_headers: str
     debug: bool
+    wg_config_dir: str
 
     def __init__(self):
         """
@@ -39,17 +40,15 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         """refresh configuration instance with current environment data
         """
         self.base_data_dir = os.environ.get("DATA_DIR", ".")
+        self.wg_config_dir = os.environ.get("WG_CONFIG_DIR", None)
+        if self.wg_config_dir is None:
+            self.wg_config_dir = "/etc/wireguard"
+
         self.db_url = "sqlite://{}".format(
             os.path.join(
-                os.environ.get("DB_FILE_PATH", "./db.sqlite3")
+                os.environ.get("DB_FILE_PATH", f"{self.base_data_dir}/db.sqlite3")
             )
         )
-        self.db_models = [
-            "models.rules",
-            "models.peer",
-            "models.wg_interface",
-            "aerich.models"
-        ]
         self.debug = ConfigUtil.str_to_bool(os.environ.get("DEBUG", "False"))
         self.api_port = int(os.environ.get("APP_PORT", "8000"))
         self.api_host = os.environ.get("APP_HOST", "0.0.0.0")
@@ -58,6 +57,16 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         self.cors_origin = os.environ.get("APP_CORS_ORIGIN", "*").split(",")
         self.cors_methods = os.environ.get("APP_CORS_METHODS", "*").split(",")
         self.cors_headers = os.environ.get("APP_CORS_HEADERS", "*").split(",")
+
+        self.db_models = [
+            "models.rules",
+            "models.peer",
+            "models.wg_interface",
+            "aerich.models"
+        ]
+
+        os.makedirs(self.base_data_dir, exist_ok=True)
+        os.makedirs(self.wg_config_dir, exist_ok=True)
 
     @staticmethod
     def str_to_bool(value: str) -> bool:
