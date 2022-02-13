@@ -36,3 +36,10 @@ def generate_presharedkey():
     return {
         "preshared_key": utils.wireguard.WgKeyUtils().generate_preshared_key()
     }
+
+
+utility_router.get("/wg/operational")
+def get_wg_operational_data():
+    """get raw response from the wireguard json module
+    """
+    return utils.wireguard.WgSystemInfo().get_wg_json()

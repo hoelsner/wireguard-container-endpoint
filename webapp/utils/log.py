@@ -45,6 +45,9 @@ class LoggingUtil(metaclass=utils.generics.SingletonMeta):
                 "wg_adapter": {
                     "propagate": True
                 },
+                "wg_sysinfo": {
+                    "propagate": True
+                },
                 "aiosqlite": {
                     "level": "INFO",
                     "propagate": True

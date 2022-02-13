@@ -54,3 +54,14 @@ class TestWgKeyUtils:
             m.setattr(wgconfig.wgexec, "get_publickey", broken_function)
             with pytest.raises(utils.wireguard.WgKeyUtilsException):
                 utils.wireguard.WgKeyUtils().get_public_key("MLwlAhfhTqPBH3ECxOY29X8DVox4rdOtrThomeUfG30=")
+
+
+class TestWgSystemInfo:
+    """
+    Test WgSystemInfo utility
+    """
+    def test_read_function(self):
+        """test basic read function for the operational state
+        """
+        # TODO: implement test cases for TestWgSystemInfo
+        pytest.skip("implement test case")

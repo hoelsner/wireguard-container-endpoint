@@ -3,18 +3,17 @@ wireguard configuration adapter for the application
 """
 # pylint: disable=logging-fstring-interpolation
 import os
-import asyncio
 import logging
 import tempfile
-from typing import Tuple
 
 import wgconfig
 
 import utils.config
 import utils.log
+import utils.generics
 
 
-class WgConfigAdapter:
+class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
     """interface for the wireguatd configuration
     """
     _config: utils.config.ConfigUtil()
@@ -38,31 +37,6 @@ class WgConfigAdapter:
         self._config_path = os.path.join(self._config.wg_config_dir, f"{self._wg_interface_instance.intf_name}.conf")
         self._wg_config = wgconfig.WGConfig(self._config_path)
 
-    async def _execute_subprocess(self, command: str) -> Tuple[str, str]:
-        """execute a subprocess at system level
-
-        :param command: command to execute
-        :type command: str
-        :return: stdout, stderr
-        :rtype: Tuple[str, str]
-        """
-        proc = await asyncio.create_subprocess_shell(
-            command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await proc.communicate()
-        self._logger.debug(f"[{command!r} exited with {proc.returncode}]")
-        if stdout:
-            stdout = stdout.decode()
-            self._logger.debug(f"standard-out of '{command}':\n{stdout}")
-
-        if stderr:
-            stderr = stderr.decode()
-            self._logger.debug(f"standard-err of '{command}':\n{stderr}")
-
-        return stdout, stderr, proc.returncode
-
     def is_initialized(self) -> bool:
         """chek if the configuration already exists
 
@@ -83,7 +57,11 @@ class WgConfigAdapter:
         wg_interface = self._wg_interface_instance.intf_name
         try:
             self._logger.info("try to create wireguard interface {wg_interface}...")
-            out, err, code = await self._execute_subprocess(f"wg-quick up {wg_interface}")
+            out, err, success = await self._execute_subprocess(f"wg-quick up {wg_interface}")
+            if not success:
+                self._logger.error("failed to create wireguard interface {wg_interface}:\n{err}")
+                return False
+
             self._logger.info("wireguard interface {wg_interface} created")
 
         except Exception as ex:
@@ -101,7 +79,11 @@ class WgConfigAdapter:
         wg_interface = self._wg_interface_instance.intf_name
         try:
             self._logger.info("try to remove wireguard interface {wg_interface}...")
-            out, err, code = await self._execute_subprocess(f"wg-quick down {wg_interface}")
+            out, err, success = await self._execute_subprocess(f"wg-quick down {wg_interface}")
+            if not success:
+                self._logger.error("failed to remove wireguard interface {wg_interface}:\n{err}")
+                return False
+
             self._logger.info("wireguard interface {wg_interface} removed")
 
         except Exception as ex:
@@ -218,8 +200,8 @@ class WgConfigAdapter:
         try:
             shell_command = f"wg-quick strip {self._config_path}"
             self._logger.debug(f"execute '{shell_command}'...")
-            config, err, code = await self._execute_subprocess(shell_command)
-            if code > 0:
+            config, err, success = await self._execute_subprocess(shell_command)
+            if not success:
                 self._logger.fatal(f"unable to strip wireguard configuration file: {code}")
                 return False
 
@@ -233,8 +215,8 @@ class WgConfigAdapter:
                 # sync configuration with file
                 shell_command = f"wg syncconf {wg_interface} {tmp_file.name}"
                 self._logger.debug(f"execute '{shell_command}'...")
-                out, err, code = await self._execute_subprocess(shell_command)
-                if code > 0:
+                out, err, success = await self._execute_subprocess(shell_command)
+                if not success:
                     if "Unable to modify interface: Operation not permitted" in err:
                         self._logger.fatal("unable to update network configuration, permission denied")
 

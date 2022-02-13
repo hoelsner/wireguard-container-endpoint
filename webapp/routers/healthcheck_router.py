@@ -32,6 +32,14 @@ async def healthcheck():
         logger.error(f"Unable to generate keys for wireguard: {ex}")
         raise HTTPException(status_code=500, detail="healthcheck for wireguard failed")
 
+    # test wg-json
+    try:
+        await utils.wireguard.WgSystemInfo().get_wg_json()
+
+    except utils.wireguard.WgSystemInfoException as ex:
+        logger.error(f"unable to get operational state of wireguard: {ex}")
+        raise HTTPException(status_code=500, detail="healthcheck for wg-json failed")
+
     # TODO: verify permissions on the data directories
 
     return MessageResponseModel(message="ok")

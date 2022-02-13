@@ -1,9 +1,17 @@
 """
 shared utilities for wireguard
 """
+import json
+import logging
+
 import wgconfig.wgexec
 
 import utils.generics
+
+
+class WgSystemInfoException(Exception):
+    """exception thrown if something is wrong within the WgSystemInfo class"""
+    pass
 
 
 class WgKeyUtilsException(Exception):
@@ -56,3 +64,30 @@ class WgKeyUtils(metaclass=utils.generics.SingletonMeta):
             raise WgKeyUtilsException("cannot convert given public to private key")
 
         return public_key
+
+
+class WgSystemInfo(utils.generics.AsyncSubProcessMixin, metaclass=utils.generics.SingletonMeta):
+    """
+    read operational data for wireguard
+    """
+    def __init__(self):
+        self._logger = logging.getLogger("wg_sysinfo")
+
+    async def get_wg_json(self) -> dict:
+        """get raw response from the wireguard operational data
+
+        :return: dict of wireguard
+        :rtype: dict
+        """
+        result = None
+        stdout, stderr, success = await self._execute_subprocess("wg-json")
+        if not success:
+            raise WgSystemInfoException("unable to run wg-json: {stderr}")
+
+        try:
+            result = json.loads(stdout.strip())
+
+        except Exception as ex:
+            raise WgSystemInfoException("unable to fetch operational data for wireguard") from ex
+
+        return result
