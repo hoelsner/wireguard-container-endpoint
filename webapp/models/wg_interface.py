@@ -6,6 +6,7 @@ model classes for the wireguard interface
 import re
 from enum import Enum
 from typing import List, Optional, Type
+from xml.etree.ElementInclude import include
 
 import tortoise.fields
 import tortoise.models
@@ -109,7 +110,6 @@ class WgInterfaceModel(tortoise.models.Model):
         """
         self.cidr_addresses = ", ".join(value)
 
-    @property
     def public_key(self) -> str:
         """compute public key from private key associated to the instance
 

@@ -73,7 +73,28 @@ Ipv6NatRuleSchemaIn: Type[PydanticModel] = pydantic_model_creator(
 
 WgInterfaceSchema: Type[PydanticModel] = pydantic_model_creator(
     WgInterfaceModel,
-    name="WgInterfaceSchema"
+    name="WgInterfaceSchema",
+    include = [
+        "public_key",
+        "peers",
+        "cidr_addresses",
+        "table",
+        "listen_port",
+        "description",
+        "policy_rule_list_id",
+        "policy_rule_list",
+        "intf_name",
+        "instance_id"
+    ],
+    computed = ["public_key"],
+    exclude = [
+        "private_key",
+        "policy_rule_list.ipv4_filter_rules",
+        "policy_rule_list.ipv4_nat_rules",
+        "policy_rule_list.ipv6_filter_rules",
+        "policy_rule_list.ipv6_nat_rules",
+        "policy_rule_list.bound_interfaces"
+    ]
 )
 WgInterfaceSchemaIn: Type[PydanticModel] = pydantic_model_creator(
     WgInterfaceModel,

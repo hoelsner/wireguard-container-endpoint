@@ -60,10 +60,7 @@ class TestWgInterfaceModel():
             cidr_addresses="10.1.1.1/24",
             private_key="kLzhT8mDRys0L+Qc462LhCTOYvM6iT6ycGPOoEu6/Xo="
         )
-        assert "4pfjphreRrMpf8ncmFzja7KIiC30OFmebEQneDQ7Mlk=" == obj.public_key
-
-        with pytest.raises(AttributeError):
-            obj.public_key = "asdf"
+        assert "4pfjphreRrMpf8ncmFzja7KIiC30OFmebEQneDQ7Mlk=" == obj.public_key()
 
     async def test_cidr_address_validation(self, test_client: TestClient, clean_db):
         """test that an invalid CIDR address will raise a validation error"""

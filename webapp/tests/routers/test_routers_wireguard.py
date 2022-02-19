@@ -39,6 +39,7 @@ class TestWgInterfaceApi:
 
         json_data = response.json()
         assert json_data == data[0]
+        assert "private_key" not in data[0].keys()
 
     async def test_crud(self, test_client: TestClient, clean_db):
         """
