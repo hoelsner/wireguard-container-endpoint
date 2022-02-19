@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 import models
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestWgPeerModel:
     """
     Test WgPeerModel model

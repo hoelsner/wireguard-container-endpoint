@@ -145,7 +145,7 @@ class AbstractIpTableRuleModel(tortoise.models.Model):
         self,
         action: str,
         table: str,
-        base_command: str = "iptable",
+        base_command: str = "iptables",
         intf_name: str=None,
         drop_rule: bool=False,
         src_network: str=None,
@@ -186,33 +186,33 @@ class AbstractIpTableRuleModel(tortoise.models.Model):
         :return: iptables command string
         :rtype: str
         """
-        operation = "-D" if drop_rule else "-A"
-        table_statement = f"{table}" if action != "MASQUERADE" else f"{table} -t nat"
+        operation = "--delete" if drop_rule else "--append"
+        table_statement = f"{table}" if action != "MASQUERADE" else f"{table} --table nat"
         base_rule = f"{base_command} {operation} {table_statement}"
 
         rule_intf_name = ""
         if intf_name:
-            rule_intf_name = f" -i {intf_name}"
+            rule_intf_name = f" --in-interface {intf_name}"
 
         rule_src = ""
         if src_network:
-            rule_src = f" -s {src_network}" if not except_src else f" ! -s {src_network}"
+            rule_src = f" --source {src_network}" if not except_src else f" ! --source {src_network}"
 
         rule_dst = ""
         if dst_network:
-            rule_dst = f" -d {dst_network}" if not except_dst else f" ! -d {dst_network}"
+            rule_dst = f" --destination {dst_network}" if not except_dst else f" ! --destination {dst_network}"
 
-        rule_protocol = "" if not protocol else f" -p {protocol}"
-        rule_dport = "" if not dst_port_number else f" -dport {dst_port_number}"
+        rule_protocol = "" if not protocol else f" --protocol {protocol}"
+        rule_dport = "" if not dst_port_number else f" --dport {dst_port_number}"
 
         rule_outgoing_intf_name = ""
         if outgoing_intf_name:
-            rule_outgoing_intf_name = f" -o {outgoing_intf_name}"
+            rule_outgoing_intf_name = f" --out-interface {outgoing_intf_name}"
 
-        result_rule = f"{base_rule} {rule_intf_name}{rule_protocol}{rule_dport}{rule_src}{rule_dst}{rule_outgoing_intf_name} -j {action}".replace("  ", " ")
+        result_rule = f"{base_rule} {rule_intf_name}{rule_protocol}{rule_dport}{rule_src}{rule_dst}{rule_outgoing_intf_name} --jump {action}".replace("  ", " ")
 
         # the following expression results in an invalid iptable and should result in an invalid rule
-        result_rule_optional = f"{base_rule} {rule_intf_name} -j {action}".replace("  ", " ")
+        result_rule_optional = f"{base_rule} {rule_intf_name} --jump {action}".replace("  ", " ")
         if result_rule_optional == result_rule:
             # return an empty string, if the rule equals the result_rule which is then not a valid iptables statement
             self._logger.debug(f"RULE {repr(self)} IS IGNORED")
@@ -312,7 +312,7 @@ class Ipv4FilterRuleModel(AbstractIpTableRuleModel):
         return self._to_iptables_rule(
             action=self.action,
             table=self.table,
-            base_command="iptable",
+            base_command="iptables",
             intf_name=intf_name,
             drop_rule=drop_rule,
             # omit statement if entire IP space is affected
@@ -407,7 +407,7 @@ class Ipv6FilterRuleModel(AbstractIpTableRuleModel):
         return self._to_iptables_rule(
             action=self.action,
             table=self.table,
-            base_command="ip6table",
+            base_command="ip6tables",
             intf_name=intf_name,
             drop_rule=drop_rule,
             # omit statement if entire IP space is affected
@@ -469,7 +469,7 @@ class Ipv4NatRuleModel(AbstractIpTableRuleModel):
             self._logger.warning("attribute intf_name changed on NAT rule, but attribute is ignored")
 
         return self._to_iptables_rule(
-            base_command="iptable",
+            base_command="iptables",
             drop_rule=drop_rule,
             table="POSTROUTING",
             action="MASQUERADE",
@@ -526,7 +526,7 @@ class Ipv6NatRuleModel(AbstractIpTableRuleModel):
             self._logger.warning("attribute intf_name changesd on NAT rule, but attribute is ignored")
 
         return self._to_iptables_rule(
-            base_command="ip6table",
+            base_command="ip6tables",
             drop_rule=drop_rule,
             table="POSTROUTING",
             action="MASQUERADE",

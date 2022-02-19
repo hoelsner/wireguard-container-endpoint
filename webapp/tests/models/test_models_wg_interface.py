@@ -9,6 +9,7 @@ from tortoise.exceptions import ValidationError, IntegrityError
 import models
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestWgInterfaceModel():
     """
     Test WgInterfaceModel

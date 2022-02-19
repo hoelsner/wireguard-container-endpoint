@@ -34,7 +34,7 @@ async def healthcheck():
 
     # test wg-json
     try:
-        await utils.wireguard.WgSystemInfo().get_wg_json()
+        await utils.wireguard.WgSystemInfoAdapter().get_wg_json()
 
     except utils.wireguard.WgSystemInfoException as ex:
         logger.error(f"unable to get operational state of wireguard: {ex}")

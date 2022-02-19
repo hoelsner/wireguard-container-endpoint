@@ -1,28 +1,44 @@
 import pytest
 from fastapi.testclient import TestClient
+import wgconfig.wgexec
+
 import utils.config
 
 
-async def test_gen_privkey(test_client: TestClient):
+def wgexec_mock():
+    """mock function to generate keys"""
+    return "yGdF7UWA/ieg1yBjIc0ahLdDQZHhK4oUAlcAytIk4Xw="
+
+
+async def test_gen_privkey(test_client: TestClient, monkeypatch):
     """test generate privkey
     """
-    response = await test_client.post("/api/utils/wg/generate/privkey")
-    assert response.status_code == 200
+    with monkeypatch.context() as m:
+        m.setattr(wgconfig.wgexec, "generate_privatekey", wgexec_mock)
 
-    json_data = response.json()
-    assert "private_key" in json_data.keys()
-    assert isinstance(json_data["private_key"], str)
+        response = await test_client.post("/api/utils/wg/generate/privkey")
+        assert response.status_code == 200
+
+        json_data = response.json()
+        assert json_data == {
+            "private_key": "yGdF7UWA/ieg1yBjIc0ahLdDQZHhK4oUAlcAytIk4Xw="
+        }
 
 
-async def test_gen_psk(test_client: TestClient):
+async def test_gen_psk(test_client: TestClient, monkeypatch):
     """test generate preshared key
     """
-    response = await test_client.post("/api/utils/wg/generate/presharedkey")
-    assert response.status_code == 200
+    with monkeypatch.context() as m:
+        m.setattr(wgconfig.wgexec, "generate_presharedkey", wgexec_mock)
 
-    json_data = response.json()
-    assert "preshared_key" in json_data.keys()
-    assert isinstance(json_data["preshared_key"], str)
+        response = await test_client.post("/api/utils/wg/generate/presharedkey")
+        assert response.status_code == 200
+
+        json_data = response.json()
+        assert json_data == {
+            "preshared_key": "yGdF7UWA/ieg1yBjIc0ahLdDQZHhK4oUAlcAytIk4Xw="
+        }
+
 
 async def test_get_instance_info(test_client: TestClient, monkeypatch):
     """test get instance info endpoint
@@ -35,6 +51,7 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
     json_data = response.json()
     assert json_data == {
         "version": cu.app_version,
+        "name": "Wireguard Docker Endpoint",
         "debug": cu.debug
     }
 
@@ -49,6 +66,7 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
         json_data = response.json()
         assert json_data == {
             "version": "MockedVersion",
+            "name": "Wireguard Docker Endpoint",
             "debug": cu.debug
         }
         m.setenv("APP_VERSION", old_value)

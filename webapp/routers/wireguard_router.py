@@ -6,7 +6,7 @@ from typing import List
 import fastapi
 from fastapi import HTTPException
 
-import app.wg
+import app.wg_config_adapter
 import models
 import schemas
 from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel, ValidationFailedResponseModel
@@ -55,7 +55,7 @@ async def get_wg_interface(instance_id: str):
 
 
 @wireguard_router.post(
-    "/interfaces/{instance_id}/config/apply",
+    "/interfaces/{instance_id}/reconfigure",
     response_model=schemas.WgInterfaceSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel}
@@ -65,8 +65,14 @@ async def get_wg_interface(instance_id: str):
     """
     force apply interface configuration at system level (will temporary disrupt the wireguard connectivity)
     """
-    instance = models.WgInterfaceModel.get(instance_id=instance_id)
-    app.wg.WgConfigAdapter(wg_interface=instance).update_interface_config()
+    instance = await models.WgInterfaceModel.get(instance_id=instance_id)
+    adapter = app.wg_config_adapter.WgConfigAdapter(wg_interface=instance)
+
+    # (re-)initialize configuration for wireguard configuration
+    await adapter.init_config(force_overwrite=True)
+    await adapter.rebuild_peer_config()
+    await adapter.apply_config(recreate_interface=True)
+
     return MessageResponseModel(message="configuration applied")
 
 
@@ -101,10 +107,11 @@ async def delete_wg_interface(instance_id: str):
     """
     delete WgInterface instance
     """
-    deleted_count = await models.WgInterfaceModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+    obj = await models.WgInterfaceModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"WgInterface {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted WgInterface {instance_id}")
 
 
@@ -178,8 +185,10 @@ async def delete_wg_peer(instance_id: str):
     """
     delete WgInterface instance
     """
-    deleted_count = await models.WgPeerModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+
+    obj = await models.WgPeerModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"WgPeer {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted WgPeer {instance_id}")

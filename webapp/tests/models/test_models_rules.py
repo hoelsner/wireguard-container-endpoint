@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 import models
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv4FilterRuleModel:
     """
     Test Ipv4FilterRuleModel model
@@ -22,14 +23,14 @@ class TestIpv4FilterRuleModel:
             dst_port_number=3000
         )
 
-        exp_rule = "iptable -A FORWARD -i %i -p tcp -dport 3000 -j DROP"
+        exp_rule = "iptables --append FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP"
         assert frm.to_iptables_rule() == exp_rule
         assert frm.__str__() == exp_rule
 
-        exp_rule = "iptable -A FORWARD -i eth0 -p tcp -dport 3000 -j DROP"
+        exp_rule = "iptables --append FORWARD --in-interface eth0 --protocol tcp --dport 3000 --jump DROP"
         assert frm.to_iptables_rule(intf_name="eth0") == exp_rule
 
-        exp_rule = "iptable -D FORWARD -i %i -p tcp -dport 3000 -j DROP"
+        exp_rule = "iptables --delete FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP"
         assert frm.to_iptables_rule(drop_rule=True) == exp_rule
 
     async def test_rule_with_ip_addresses(self, test_client: TestClient, clean_db):
@@ -42,11 +43,11 @@ class TestIpv4FilterRuleModel:
             dst_network="192.168.2.0/24"
         )
 
-        exp_rule = "iptable -A FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP"
+        exp_rule = "iptables --append FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP"
         assert frm.to_iptables_rule() == exp_rule
 
     async def test_ignore_rule(self, test_client: TestClient, clean_db):
-        """test rule with IPv4 network filter
+        """test empty rule
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
         frm = await models.Ipv4FilterRuleModel.create(
@@ -66,7 +67,7 @@ class TestIpv4FilterRuleModel:
             action=models.IpTableActionEnum.ACCEPT
         )
 
-        exp_rule = "iptable -A FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j ACCEPT"
+        exp_rule = "iptables --append FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump ACCEPT"
         assert frm.to_iptables_rule() == exp_rule
 
     async def test_rule_with_ip_addresses_and_table(self, test_client: TestClient, clean_db):
@@ -80,7 +81,7 @@ class TestIpv4FilterRuleModel:
             table=models.IpTableNameEnum.INPUT
         )
 
-        exp_rule = "iptable -A INPUT -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP"
+        exp_rule = "iptables --append INPUT --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP"
         assert frm.to_iptables_rule() == exp_rule
 
     async def test_rule_with_ip_addresses_and_except(self, test_client: TestClient, clean_db):
@@ -95,10 +96,11 @@ class TestIpv4FilterRuleModel:
             except_dst=True
         )
 
-        exp_rule = "iptable -A FORWARD -i %i ! -s 192.168.1.0/24 ! -d 192.168.2.0/24 -j DROP"
+        exp_rule = "iptables --append FORWARD --in-interface %i ! --source 192.168.1.0/24 ! --destination 192.168.2.0/24 --jump DROP"
         assert frm.to_iptables_rule() == exp_rule
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv6FilterRuleModel:
     """
     Test Ipv6FilterRuleModel model
@@ -109,11 +111,11 @@ class TestIpv6FilterRuleModel:
         prl = await models.PolicyRuleListModel.create(name="foo")
         frm = await models.Ipv6FilterRuleModel.create(
             policy_rule_list=prl,
-            src_network="DB8:0::/64",
-            dst_network="DB8:1::/64"
+            src_network="2001:DB8:0::/64",
+            dst_network="2001:DB8:1::/64"
         )
 
-        exp_rule = "ip6table -A FORWARD -i %i -s DB8:0::/64 -d DB8:1::/64 -j DROP"
+        exp_rule = "ip6tables --append FORWARD --in-interface %i --source 2001:DB8:0::/64 --destination 2001:DB8:1::/64 --jump DROP"
         assert frm.to_iptables_rule() == exp_rule
         assert frm.__str__() == exp_rule
 
@@ -126,6 +128,7 @@ class TestIpv6FilterRuleModel:
         assert data[0]["instance_id"] == str(frm.instance_id), response.text
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv4NatRuleModel:
     """
     Test TestIpv4NatRuleModel model
@@ -138,7 +141,7 @@ class TestIpv4NatRuleModel:
             policy_rule_list=prl
         )
 
-        exp_rule = "iptable -A POSTROUTING -t nat -o eth0 -j MASQUERADE"
+        exp_rule = "iptables --append POSTROUTING --table nat --out-interface eth0 --jump MASQUERADE"
         assert frm.to_iptables_rule() == exp_rule
         assert frm.__str__() == exp_rule
 
@@ -151,11 +154,12 @@ class TestIpv4NatRuleModel:
             target_interface="eth8"
         )
 
-        exp_rule = "iptable -A POSTROUTING -t nat -o eth8 -j MASQUERADE"
+        exp_rule = "iptables --append POSTROUTING --table nat --out-interface eth8 --jump MASQUERADE"
         assert frm.to_iptables_rule(intf_name="foo") == exp_rule, "This must not change anything on the iptables command"
         assert frm.__str__() == exp_rule
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv6NatRuleModel:
     """
     Test TestIpv6NatRuleModel model
@@ -168,7 +172,7 @@ class TestIpv6NatRuleModel:
             policy_rule_list=prl
         )
 
-        exp_rule = "ip6table -A POSTROUTING -t nat -o eth0 -j MASQUERADE"
+        exp_rule = "ip6tables --append POSTROUTING --table nat --out-interface eth0 --jump MASQUERADE"
         assert frm.to_iptables_rule() == exp_rule
         assert frm.__str__() == exp_rule
 
@@ -181,11 +185,12 @@ class TestIpv6NatRuleModel:
             target_interface="eth8"
         )
 
-        exp_rule = "ip6table -A POSTROUTING -t nat -o eth8 -j MASQUERADE"
+        exp_rule = "ip6tables --append POSTROUTING --table nat --out-interface eth8 --jump MASQUERADE"
         assert frm.to_iptables_rule(intf_name="foo") == exp_rule, "This must not change anything on the iptables command"
         assert frm.__str__() == exp_rule
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestPolicyRuleListModel:
     """
     Test PolicyRuleList model
@@ -223,8 +228,8 @@ class TestPolicyRuleListModel:
         )
         await models.Ipv6FilterRuleModel.create(
             policy_rule_list=prl,
-            src_network="DB8:0::/64",
-            dst_network="DB8:1::/64"
+            src_network="2001:DB8:0::/64",
+            dst_network="2001:DB8:1::/64"
         )
         await models.Ipv4NatRuleModel.create(
             policy_rule_list=prl,
@@ -250,24 +255,24 @@ class TestPolicyRuleListModel:
         await self._create_test_data(prl)
 
         expected_create_result = [
-            "iptable -A FORWARD -i %i -p tcp -dport 3000 -j DROP",
-            "iptable -A FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -A FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j ACCEPT",
-            "iptable -A INPUT -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -A FORWARD -i %i ! -s 192.168.1.0/24 ! -d 192.168.2.0/24 -j DROP",
-            "ip6table -A FORWARD -i %i -s DB8:0::/64 -d DB8:1::/64 -j DROP",
-            "iptable -A POSTROUTING -t nat -o eth1 -j MASQUERADE",
-            "ip6table -A POSTROUTING -t nat -o eth8 -j MASQUERADE"
+            "iptables --append FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP",
+            "iptables --append FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --append FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump ACCEPT",
+            "iptables --append INPUT --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --append FORWARD --in-interface %i ! --source 192.168.1.0/24 ! --destination 192.168.2.0/24 --jump DROP",
+            "ip6tables --append FORWARD --in-interface %i --source 2001:DB8:0::/64 --destination 2001:DB8:1::/64 --jump DROP",
+            "iptables --append POSTROUTING --table nat --out-interface eth1 --jump MASQUERADE",
+            "ip6tables --append POSTROUTING --table nat --out-interface eth8 --jump MASQUERADE"
         ]
         expected_drop_result = [
-            "iptable -D FORWARD -i %i -p tcp -dport 3000 -j DROP",
-            "iptable -D FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -D FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j ACCEPT",
-            "iptable -D INPUT -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -D FORWARD -i %i ! -s 192.168.1.0/24 ! -d 192.168.2.0/24 -j DROP",
-            "ip6table -D FORWARD -i %i -s DB8:0::/64 -d DB8:1::/64 -j DROP",
-            "iptable -D POSTROUTING -t nat -o eth1 -j MASQUERADE",
-            "ip6table -D POSTROUTING -t nat -o eth8 -j MASQUERADE"
+            "iptables --delete FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP",
+            "iptables --delete FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --delete FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump ACCEPT",
+            "iptables --delete INPUT --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --delete FORWARD --in-interface %i ! --source 192.168.1.0/24 ! --destination 192.168.2.0/24 --jump DROP",
+            "ip6tables --delete FORWARD --in-interface %i --source 2001:DB8:0::/64 --destination 2001:DB8:1::/64 --jump DROP",
+            "iptables --delete POSTROUTING --table nat --out-interface eth1 --jump MASQUERADE",
+            "ip6tables --delete POSTROUTING --table nat --out-interface eth8 --jump MASQUERADE"
         ]
 
         result = await prl.to_iptables_list(intf_name="%i", drop_rule=False)
@@ -283,20 +288,20 @@ class TestPolicyRuleListModel:
         await self._create_test_data(prl)
 
         expected_create_result_ipv4 = [
-            "iptable -A FORWARD -i %i -p tcp -dport 3000 -j DROP",
-            "iptable -A FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -A FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j ACCEPT",
-            "iptable -A INPUT -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -A FORWARD -i %i ! -s 192.168.1.0/24 ! -d 192.168.2.0/24 -j DROP",
-            "iptable -A POSTROUTING -t nat -o eth1 -j MASQUERADE"
+            "iptables --append FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP",
+            "iptables --append FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --append FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump ACCEPT",
+            "iptables --append INPUT --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --append FORWARD --in-interface %i ! --source 192.168.1.0/24 ! --destination 192.168.2.0/24 --jump DROP",
+            "iptables --append POSTROUTING --table nat --out-interface eth1 --jump MASQUERADE"
         ]
         expected_drop_result_ipv4 = [
-            "iptable -D FORWARD -i %i -p tcp -dport 3000 -j DROP",
-            "iptable -D FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -D FORWARD -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j ACCEPT",
-            "iptable -D INPUT -i %i -s 192.168.1.0/24 -d 192.168.2.0/24 -j DROP",
-            "iptable -D FORWARD -i %i ! -s 192.168.1.0/24 ! -d 192.168.2.0/24 -j DROP",
-            "iptable -D POSTROUTING -t nat -o eth1 -j MASQUERADE"
+            "iptables --delete FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP",
+            "iptables --delete FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --delete FORWARD --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump ACCEPT",
+            "iptables --delete INPUT --in-interface %i --source 192.168.1.0/24 --destination 192.168.2.0/24 --jump DROP",
+            "iptables --delete FORWARD --in-interface %i ! --source 192.168.1.0/24 ! --destination 192.168.2.0/24 --jump DROP",
+            "iptables --delete POSTROUTING --table nat --out-interface eth1 --jump MASQUERADE"
         ]
         result = await prl.to_ipv4_iptables_list(intf_name="%i", drop_rule=False)
         assert expected_create_result_ipv4 == result
@@ -311,12 +316,12 @@ class TestPolicyRuleListModel:
         await self._create_test_data(prl)
 
         expected_create_result_ipv6 = [
-            "ip6table -A FORWARD -i %i -s DB8:0::/64 -d DB8:1::/64 -j DROP",
-            "ip6table -A POSTROUTING -t nat -o eth8 -j MASQUERADE"
+            "ip6tables --append FORWARD --in-interface %i --source 2001:DB8:0::/64 --destination 2001:DB8:1::/64 --jump DROP",
+            "ip6tables --append POSTROUTING --table nat --out-interface eth8 --jump MASQUERADE"
         ]
         expected_drop_result_ipv6 = [
-            "ip6table -D FORWARD -i %i -s DB8:0::/64 -d DB8:1::/64 -j DROP",
-            "ip6table -D POSTROUTING -t nat -o eth8 -j MASQUERADE"
+            "ip6tables --delete FORWARD --in-interface %i --source 2001:DB8:0::/64 --destination 2001:DB8:1::/64 --jump DROP",
+            "ip6tables --delete POSTROUTING --table nat --out-interface eth8 --jump MASQUERADE"
         ]
         result = await prl.to_ipv6_iptables_list(intf_name="%i", drop_rule=False)
         assert expected_create_result_ipv6 == result

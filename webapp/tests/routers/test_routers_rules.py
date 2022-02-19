@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 import models
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv4FilterRuleApi:
     """
     Test Ipv4FilterRuleModel API
@@ -140,6 +141,7 @@ class TestIpv4FilterRuleApi:
         }
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv6FilterRuleApi:
     """
     Test Ipv6FilterRuleModel API
@@ -256,6 +258,7 @@ class TestIpv6FilterRuleApi:
         }, response.text
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv4NatRuleApi:
     """
     Test Ipv4NatRuleModel API
@@ -354,6 +357,7 @@ class TestIpv4NatRuleApi:
         }, response.text
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestIpv6NatRuleApi:
     """
     Test Ipv6NatRuleModel API
@@ -425,6 +429,7 @@ class TestIpv6NatRuleApi:
         assert response.status_code == 404
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestPolicyRuleList:
     """
     Test PolicyRuleList API

@@ -22,7 +22,7 @@ else
             -subj "/C=/ST=/L=/O=/CN=${SELF_SIGNED_CERT_CN}"
     fi
 
-    uvicorn app:create \
+    uvicorn app.fast_api:create \
         --factory \
         --host=${APP_HOST} \
         --port=${APP_PORT} \

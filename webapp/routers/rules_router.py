@@ -82,10 +82,11 @@ async def delete_filter_ipv4_instance(instance_id: str):
     """
     delete IPv4FilterRule instance
     """
-    deleted_count = await models.Ipv4FilterRuleModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+    obj = await models.Ipv4FilterRuleModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"Ipv4FilterRule {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted Ipv4FilterRule {instance_id}")
 
 
@@ -159,10 +160,11 @@ async def delete_filter_ipv6_instance(instance_id: str):
     """
     delete IPv6FilterRule instance
     """
-    deleted_count = await models.Ipv6FilterRuleModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+    obj = await models.Ipv6FilterRuleModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"Ipv6FilterRule {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted Ipv6FilterRule {instance_id}")
 
 
@@ -236,10 +238,11 @@ async def delete_nat_ipv4_rule(instance_id: str):
     """
     delete Ipv4NatRuleModel instance
     """
-    deleted_count = await models.Ipv4NatRuleModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+    obj = await models.Ipv4NatRuleModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"Ipv4NatRule {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted Ipv4NatRule {instance_id}")
 
 
@@ -313,10 +316,11 @@ async def delete_nat_ipv6_rule(instance_id: str):
     """
     delete Ipv6NatRuleModel instance
     """
-    deleted_count = await models.Ipv6NatRuleModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+    obj = await models.Ipv6NatRuleModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"Ipv6NatRule {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted Ipv6NatRule {instance_id}")
 
 
@@ -339,7 +343,6 @@ async def create_policy_rule_list(data: schemas.PolicyRuleListSchemaIn):
     """
     create new PolicyRuleList
     """
-    print(data.dict(exclude_unset=True))
     obj = await models.PolicyRuleListModel.create(**data.dict(exclude_unset=True))
     return await schemas.PolicyRuleListSchema.from_tortoise_orm(obj)
 
@@ -391,8 +394,9 @@ async def delete_policy_rule_list(instance_id: str):
     """
     delete PolicyRuleList instance
     """
-    deleted_count = await models.PolicyRuleListModel.filter(instance_id=instance_id).delete()
-    if not deleted_count:
+    obj = await models.PolicyRuleListModel.get_or_none(instance_id=instance_id)
+    if obj is None:
         raise HTTPException(status_code=404, detail=f"PolicyRuleList {instance_id} not found")
 
+    await obj.delete()
     return MessageResponseModel(message=f"Deleted PolicyRuleList {instance_id}")

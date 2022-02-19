@@ -37,6 +37,7 @@ ENV DATA_DIR="/opt/data" \
     APP_CORS_ORIGIN="*" \
     APP_CORS_METHODS="*" \
     APP_CORS_HEADERS="*" \
+    LOG_LEVEL="info" \
     # unset UVICORN_SSL_KEYFILE to disable HTTPs
     UVICORN_SSL_KEYFILE="/opt/data/ssl/privkey.pem" \
     UVICORN_SSL_CERTFILE="/opt/data/ssl/fullchain.pem" \

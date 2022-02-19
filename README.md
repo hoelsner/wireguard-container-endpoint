@@ -1,6 +1,6 @@
 # Wireguard Container Endpoint (WGCE)
 
-This project contains the code for a Container that provides access to a Wireguard VPN for local containers and single networks (see [scenarios.md](./docs/scenarios.md) for target Use-Cases/Scenarios).
+The Container provides a REST API to configure Wireguard interfaces and iptable filter on a host. The intended Use-Cases/Scenarios are described [here](./docs/scenarios.md).
 
 ## TO-DO
 
@@ -69,7 +69,13 @@ pytest --lf
 ptw
 ```
 
-## How to Build and Run a Production Container
+### Development Guidelines
+
+The following guidelines should apply to the development of this project:
+
+* when calling OS-level subprocesses (Linux only), use the `utils.generics.AsyncSubProcessMixin` and at least disable them using the `disable_os_level_commands` fixture within the pytest unit-tests
+
+## How to Build and Run the Container
 
 To build and start a production container, use the following commands on the repository root directory:
 

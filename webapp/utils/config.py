@@ -18,12 +18,15 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
     api_port: int
     api_host: str
     log_level: str
+    app_name: str
     app_version: str
     cors_origin: str
     cors_methods: str
     cors_headers: str
     debug: bool
     wg_config_dir: str
+    wg_tmp_dir: str
+    peer_tracking_timer: int
 
     def __init__(self):
         """
@@ -44,6 +47,8 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         if self.wg_config_dir is None:
             self.wg_config_dir = "/etc/wireguard"
 
+        self.wg_tmp_dir = os.path.join(self.wg_config_dir, "tmp_files")
+
         self.db_url = "sqlite://{}".format(
             os.path.join(
                 os.environ.get("DB_FILE_PATH", f"{self.base_data_dir}/db.sqlite3")
@@ -53,10 +58,12 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         self.api_port = int(os.environ.get("APP_PORT", "8000"))
         self.api_host = os.environ.get("APP_HOST", "0.0.0.0")
         self.log_level = os.environ.get("LOG_LEVEL", "debug").upper()
+        self.app_name = os.environ.get("APP_NAME", "Wireguard Docker Endpoint")
         self.app_version = os.environ.get("APP_VERSION", "undefined")
         self.cors_origin = os.environ.get("APP_CORS_ORIGIN", "*").split(",")
         self.cors_methods = os.environ.get("APP_CORS_METHODS", "*").split(",")
         self.cors_headers = os.environ.get("APP_CORS_HEADERS", "*").split(",")
+        self.peer_tracking_timer = int(os.environ.get("APP_PEER_TRACKING_TIMER", "10"))
 
         self.db_models = [
             "models.rules",
@@ -67,6 +74,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
 
         os.makedirs(self.base_data_dir, exist_ok=True)
         os.makedirs(self.wg_config_dir, exist_ok=True)
+        os.makedirs(self.wg_tmp_dir, exist_ok=True)
 
     @staticmethod
     def str_to_bool(value: str) -> bool:

@@ -16,6 +16,7 @@ def get_instance_info():
     config = utils.config.ConfigUtil()
     return {
         "version": config.app_version,
+        "name": config.app_name,
         "debug": config.debug
     }
 
@@ -38,8 +39,9 @@ def generate_presharedkey():
     }
 
 
-utility_router.get("/wg/operational")
-def get_wg_operational_data():
+@utility_router.get("/wg/operational")
+async def get_wg_operational_data():
     """get raw response from the wireguard json module
     """
-    return utils.wireguard.WgSystemInfo().get_wg_json()
+    # TODO: hide private-key on endpoint
+    return await utils.wireguard.WgSystemInfoAdapter().get_wg_json()

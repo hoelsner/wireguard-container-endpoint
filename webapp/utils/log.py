@@ -19,11 +19,16 @@ class LoggingUtil(metaclass=utils.generics.SingletonMeta):
         initialize logging configuration
         """
         config = ConfigUtil()
+        format_string = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
+        if config.debug:
+            # use a more expressive debugger when debug mode is enabled
+            format_string = "%(relativeCreated)s | %(name)s | %(levelname)s | %(module)s | %(funcName)s | %(message)s"
+
         self.log_config = {
             "version": 1,
             "formatters": {
                 "default": {
-                    "format": "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
+                    "format": format_string
                 }
             },
             "handlers": {
@@ -46,6 +51,9 @@ class LoggingUtil(metaclass=utils.generics.SingletonMeta):
                     "propagate": True
                 },
                 "wg_sysinfo": {
+                    "propagate": True
+                },
+                "peer_tracking": {
                     "propagate": True
                 },
                 "aiosqlite": {

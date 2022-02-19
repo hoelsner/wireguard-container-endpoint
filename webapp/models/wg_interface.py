@@ -13,8 +13,9 @@ import tortoise.validators
 import tortoise.signals
 import wgconfig.wgexec
 
-import app.wg
+import app.wg_config_adapter
 import utils.regex
+import utils.log
 import utils.tortoise.validators
 import models.rules
 import models.peer
@@ -131,8 +132,15 @@ async def wginterfacemodel_pre_save(
     update_fields: List[str],
 ) -> None:
     """trigger sync with wgconfig"""
-    await app.wg.WgConfigAdapter(wg_interface=instance).update_interface_config()
+    logger = utils.log.LoggingUtil().logger
 
+    logger.info(f"update interface config '{instance.intf_name}'")
+    adapter = app.wg_config_adapter.WgConfigAdapter(wg_interface=instance)
+
+    # (re-)initialize configuration for wireguard configuration
+    await adapter.init_config(force_overwrite=True)
+    await adapter.rebuild_peer_config()
+    await adapter.apply_config(recreate_interface=True)
 
 @tortoise.signals.post_delete(WgInterfaceModel)
 async def wginterfacemodel_pre_delete(
@@ -141,4 +149,7 @@ async def wginterfacemodel_pre_delete(
     using_db: "Optional[BaseDBAsyncClient]"
 ) -> None:
     """trigger sync with wgconfig"""
-    await app.wg.WgConfigAdapter(wg_interface=instance).update_interface_config()
+    logger = utils.log.LoggingUtil().logger
+
+    logger.info(f"remove interface '{instance.intf_name}'")
+    await app.wg_config_adapter.WgConfigAdapter(wg_interface=instance).interface_down()

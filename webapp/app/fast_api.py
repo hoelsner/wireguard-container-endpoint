@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-import app.wg
+import app.wg_config_adapter
+import app.peer_tracking
 import models
 import routers
 from utils.config import ConfigUtil
@@ -78,22 +79,31 @@ async def startup_app() -> None:
     logger.info("ORM generating schema")
     await tortoise.Tortoise.generate_schemas(safe=True)
 
-    # WgInterface startup
+    # create wireguard configuration based on loaded database
     for wgintf in await models.WgInterfaceModel.all():
-        instance = app.wg.WgConfigAdapter(wg_interface=wgintf)
-        await instance.recreate_config()
+        logger.warning(f"re-initialize wireguard config and interface '{wgintf}'...")
+        instance = app.wg_config_adapter.WgConfigAdapter(wg_interface=wgintf)
+        await instance.interface_down()
+        await instance.delete_config()
+        await instance.init_config(force_overwrite=True)
+        await instance.rebuild_peer_config()
+        await instance.interface_up()
+        await instance.apply_config()
 
 
 async def shutdown_app() -> None:
     """close app
     """
-    # WgInterface startup
+    logger = LoggingUtil().logger
+
+    # remove wireguard configuration from system
     for wgintf in await models.WgInterfaceModel.all():
-        instance = app.wg.WgConfigAdapter(wg_interface=wgintf)
+        logger.warning(f"remove wireguard interface '{wgintf}'...")
+        instance = app.wg_config_adapter.WgConfigAdapter(wg_interface=wgintf)
         await instance.interface_down()
+        await instance.delete_config()
 
     # ORM shutdown
-    logger = LoggingUtil().logger
     await tortoise.Tortoise.close_connections()
     logger.info("ORM shutdown")
 
@@ -111,7 +121,7 @@ def create() -> FastAPI:
 
     # create FastAPI
     fast_api = FastAPI(
-        title="Wireguard Docker Endpoint",
+        title=config_util.app_name,
         description="API to configure wireguard peers via a REST API served by the container",
         version=config_util.app_version,
         debug=config_util.debug
@@ -133,6 +143,7 @@ def create() -> FastAPI:
 
     # register event handler
     fast_api.add_event_handler("startup", startup_app)
+    fast_api.add_event_handler("startup", app.peer_tracking.run_peer_tracking)
     fast_api.add_event_handler("shutdown", shutdown_app)
 
     # include routers

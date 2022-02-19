@@ -7,8 +7,10 @@ import tortoise.validators
 import tortoise.models
 from tortoise import BaseDBAsyncClient
 
-import app.wg
+import app.wg_config_adapter
 import utils.regex
+import utils.wireguard
+import utils.log
 import utils.tortoise.validators
 
 
@@ -34,7 +36,7 @@ class WgPeerModel(tortoise.models.Model):
         max_length=64,
         null=True,
         validators=[
-            utils.tortoise.validators.RegexOrNoneValidator(utils.regex.WG_KEY_REGEX, re.I)
+            utils.tortoise.validators.RegexOrNoneValidator("^[a-zA-Z0-9_-]*$", re.I)
         ]
     )
     description = tortoise.fields.CharField(
@@ -44,7 +46,11 @@ class WgPeerModel(tortoise.models.Model):
     )
     persistent_keepalives = tortoise.fields.IntField(
         null=True,
-        default=-1
+        default=-1,
+        validators=[
+            tortoise.validators.MinValueValidator(-1),
+            tortoise.validators.MaxValueValidator(65535)
+        ]
     )
     preshared_key = tortoise.fields.CharField(
         max_length=64,
@@ -105,8 +111,17 @@ async def wgpeermodel_pre_save(
     update_fields: List[str],
 ) -> None:
     """trigger sync with wgconfig"""
+    logger = utils.log.LoggingUtil().logger
     await instance.fetch_related("wg_interface")
-    await app.wg.WgConfigAdapter(wg_interface=instance.wg_interface).update_peer_config()
+    logger.info(f"update peer configuration for {instance.wg_interface.intf_name}")
+
+    # update wireguard configuration
+    adapter = app.wg_config_adapter.WgConfigAdapter(wg_interface=instance.wg_interface)
+    await adapter.init_config()
+    await adapter.rebuild_peer_config()
+    await adapter.apply_config()
+
+    # routes are updated based on the model signals when adding and deleting peers
 
 
 @tortoise.signals.post_delete(WgPeerModel)
@@ -116,5 +131,17 @@ async def wgpeermodel_pre_delete(
     using_db: "Optional[BaseDBAsyncClient]"
 ) -> None:
     """trigger sync with wgconfig"""
+    logger = utils.log.LoggingUtil().logger
     await instance.fetch_related("wg_interface")
-    await app.wg.WgConfigAdapter(wg_interface=instance.wg_interface).update_peer_config()
+    logger.info(f"update peer configuration for {instance.wg_interface.intf_name}")
+
+    # update wireguard configuration
+    adapter = app.wg_config_adapter.WgConfigAdapter(wg_interface=instance.wg_interface)
+    await adapter.init_config()
+    await adapter.rebuild_peer_config()
+    await adapter.apply_config()
+
+    # remove routes for peer
+    ip_adapter = utils.wireguard.IpRouteAdapter()
+    for ip_net in instance.cidr_routes_list:
+        ip_adapter.remove_ip_route(intf_name=instance.wg_interface.intf_name, ip_network=ip_net)

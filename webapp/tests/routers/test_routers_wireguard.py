@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 import models
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestWgInterfaceApi:
     """
     Test WgInterfaceModel API
@@ -103,7 +104,14 @@ class TestWgInterfaceApi:
             }
         ]
 
+    async def test_wireguard_interface_reconfigure(self, test_client: TestClient, clean_db):
+        """test reconfigure API call
+        """
+        # TODO: implement test case for wireguard interface reconfigure API endpoint
+        pytest.skip("implement test case")
 
+
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestWgPeerApi:
     """
     Test WgPeer API endpoints

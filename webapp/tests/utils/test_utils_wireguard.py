@@ -56,12 +56,12 @@ class TestWgKeyUtils:
                 utils.wireguard.WgKeyUtils().get_public_key("MLwlAhfhTqPBH3ECxOY29X8DVox4rdOtrThomeUfG30=")
 
 
-class TestWgSystemInfo:
+class TestWgSystemInfoAdapter:
     """
-    Test WgSystemInfo utility
+    Test WgSystemInfoAdapter utility
     """
     def test_read_function(self):
         """test basic read function for the operational state
         """
-        # TODO: implement test cases for TestWgSystemInfo
+        # TODO: implement test cases for TestWgSystemInfoAdapter
         pytest.skip("implement test case")

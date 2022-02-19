@@ -11,6 +11,7 @@ import wgconfig
 import utils.config
 import utils.log
 import utils.generics
+import utils.wireguard
 
 
 class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
@@ -37,6 +38,12 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
         self._config_path = os.path.join(self._config.wg_config_dir, f"{self._wg_interface_instance.intf_name}.conf")
         self._wg_config = wgconfig.WGConfig(self._config_path)
 
+    def __str__(self):
+        return f"Config Adapter {self._wg_interface_instance}"
+
+    def __repr__(self):
+        return f"<WgConfigAdapter {self._wg_interface_instance}>"
+
     def is_initialized(self) -> bool:
         """chek if the configuration already exists
 
@@ -48,21 +55,35 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
 
         return False
 
+    async def interface_exists(self) -> bool:
+        """check if the interface exists on the system
+
+        :return: [description]
+        :rtype: bool
+        """
+        wg_json = await utils.wireguard.WgSystemInfoAdapter().get_wg_json()
+        # WgSystemInfoAdapter returns a dictionary for interfaces that are configured
+        # on interface level
+        return self._wg_interface_instance.intf_name in wg_json.keys()
+
     async def interface_up(self) -> bool:
         """enable interface using wg-quick and the given configuration of the interface
 
         :return: True if successful, otherwise false
         :rtype: bool
         """
+        if await self.interface_exists():
+            return True
+
         wg_interface = self._wg_interface_instance.intf_name
         try:
-            self._logger.info("try to create wireguard interface {wg_interface}...")
-            out, err, success = await self._execute_subprocess(f"wg-quick up {wg_interface}")
+            self._logger.info(f"try to create wireguard interface {wg_interface}...")
+            out, err, success = await self._execute_subprocess(f"wg-quick up {self._config_path}")
             if not success:
-                self._logger.error("failed to create wireguard interface {wg_interface}:\n{err}")
+                self._logger.error(f"failed to create wireguard interface {wg_interface}:\n{err}")
                 return False
 
-            self._logger.info("wireguard interface {wg_interface} created")
+            self._logger.info(f"wireguard interface {wg_interface} created")
 
         except Exception as ex:
             self._logger.error(f"failed to run wg-quick up: {ex}")
@@ -76,15 +97,18 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
         :return: True if successful, otherwise false
         :rtype: bool
         """
+        if not await self.interface_exists():
+            return True
+
         wg_interface = self._wg_interface_instance.intf_name
         try:
-            self._logger.info("try to remove wireguard interface {wg_interface}...")
-            out, err, success = await self._execute_subprocess(f"wg-quick down {wg_interface}")
+            self._logger.info(f"try to remove wireguard interface {wg_interface}...")
+            out, err, success = await self._execute_subprocess(f"wg-quick down {self._config_path}")
             if not success:
-                self._logger.error("failed to remove wireguard interface {wg_interface}:\n{err}")
+                self._logger.error(f"failed to remove wireguard interface {wg_interface}:\n{err}")
                 return False
 
-            self._logger.info("wireguard interface {wg_interface} removed")
+            self._logger.info(f"wireguard interface {wg_interface} removed")
 
         except Exception as ex:
             self._logger.error(f"failed to run wg-quick down: {ex}")
@@ -105,8 +129,7 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
             self._wg_config.add_attr(None, "PrivateKey", self._wg_interface_instance.private_key, append_as_line=False)
             self._wg_config.add_attr(None, "Address", self._wg_interface_instance.cidr_addresses, append_as_line=False)
             self._wg_config.add_attr(None, "ListenPort", self._wg_interface_instance.listen_port, append_as_line=False)
-            self._wg_config.add_attr(None, "Table", self._wg_interface_instance.table, append_as_line=False)
-            self._wg_config.add_attr(None, "Table", self._wg_interface_instance.table, append_as_line=False)
+            self._wg_config.add_attr(None, "Table", self._wg_interface_instance.table.value, append_as_line=False)
 
             await self._wg_interface_instance.fetch_related("policy_rule_list")
 
@@ -120,12 +143,14 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
                     self._wg_config.add_attr(
                         None,
                         "PostUp",
-                        "; ".join(ipv4_rules)
+                        "; ".join(ipv4_rules),
+                        append_as_line=True
                     )
                     self._wg_config.add_attr(
                         None,
                         "PostDown",
-                        "; ".join(drop_ipv4_rules)
+                        "; ".join(drop_ipv4_rules),
+                        append_as_line=True
                     )
 
                 # add IPv6 policy if defined
@@ -134,20 +159,33 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
                     self._wg_config.add_attr(
                         None,
                         "PostUp",
-                        "; ".join(ipv6_rules)
+                        "; ".join(ipv6_rules),
+                        append_as_line=True
                     )
                     self._wg_config.add_attr(
                         None,
                         "PostDown",
-                        "; ".join(drop_ipv6_rules)
+                        "; ".join(drop_ipv6_rules),
+                        append_as_line=True
                     )
 
             self._wg_config.write_file()
+
+            # create interface if not existing or recreate with force_overwrite
+            if force_overwrite:
+                await self.interface_down()
+                await self.interface_up()
+
+            elif not await self.interface_exists():
+                await self.interface_up()
+
             self._logger.info(f"interface configuration for {self._wg_interface_instance.intf_name} initialized")
+            self._logger.debug(f"wireguard config created:\n{self._wg_config.interface}\n{self._wg_config.peers}")
 
         else:
             self._wg_config.read_file()
             self._logger.debug(f"interface configuration for {self._wg_interface_instance.intf_name} read from disk")
+            self._logger.debug(f"wireguard config read from disk:\n{self._wg_config.interface}\n{self._wg_config.peers}")
 
     async def rebuild_peer_config(self) -> bool:
         """rebuild peer section in configuration
@@ -165,54 +203,61 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
         for public_key in self._wg_config.peers.keys():
             self._wg_config.del_peer(public_key)
 
-        # rebuild peer table
+        # rebuild wireguard peer table
         try:
             for peer in self._wg_interface_instance.peers:
-                self._wg_config.add_peer(peer.public_key, f"{peer.friendly_name} / {peer.description} / {peer.instance_id}")
+                # add a comment with some information about the peer to make the configuration more readable
+                self._wg_config.add_peer(peer.public_key, f"# {peer.instance_id} / {peer.friendly_name} / {peer.description}")
                 self._wg_config.add_attr(peer.public_key, "AllowedIPs", peer.cidr_routes)
 
                 if peer.endpoint:
                     self._wg_config.add_attr(peer.public_key, "Endpoint", peer.endpoint)
 
-                if peer.persistent_keepalives:
+                if peer.persistent_keepalives > 0:
                     self._wg_config.add_attr(peer.public_key, "PersistentKeepalive", peer.persistent_keepalives)
 
                 if peer.preshared_key:
                     self._wg_config.add_attr(peer.public_key, "PresharedKey", peer.preshared_key)
 
+            self._logger.debug(f"persist configuration files for {repr(self)}")
             self._wg_config.write_file()
 
         except Exception as ex:
             self._logger.error(f"unable to update peer list: {ex}")
             return False
 
+        self._logger.debug(f"peer config for '{self._wg_interface_instance.intf_name}' updated")
         return True
 
-    async def apply_config(self) -> bool:
+    async def apply_config(self, recreate_interface: bool=False) -> bool:
         """apply new configuration to system
 
+        :param recreate_interface: recreate the interface on system level (will disrupt the connectivity), defaults to False
+        :type recreate_interface: bool, optional
         :return: True if apply was successful, otherwise faile
         :rtype: bool
         """
         wg_interface = self._wg_interface_instance.intf_name
         success_state = True
+        interface_exists = await self.interface_exists()
 
         try:
             shell_command = f"wg-quick strip {self._config_path}"
             self._logger.debug(f"execute '{shell_command}'...")
             config, err, success = await self._execute_subprocess(shell_command)
             if not success:
-                self._logger.fatal(f"unable to strip wireguard configuration file: {code}")
+                self._logger.fatal("unable to strip wireguard configuration file")
                 return False
 
             # create temporary file with the config to apply sync
-            with tempfile.NamedTemporaryFile(delete=not self._config.debug, suffix=".wgtempconf") as tmp_file:
+            with tempfile.NamedTemporaryFile(delete=not self._config.debug, suffix=".wgtempconf", dir=self._config.wg_tmp_dir) as tmp_file:
                 # write configuration results to file
                 self._logger.debug(f"write temporary wireguard configuration file to disk at {tmp_file.name}")
                 tmp_file.write(config.encode("utf-8"))
                 tmp_file.flush()
 
-                # sync configuration with file
+                # sync the wireguard configuration with the configuration file
+                # this WON'T update the routing table (handled by another component)
                 shell_command = f"wg syncconf {wg_interface} {tmp_file.name}"
                 self._logger.debug(f"execute '{shell_command}'...")
                 out, err, success = await self._execute_subprocess(shell_command)
@@ -230,37 +275,23 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
             self._logger.fatal(f"failed to apply the Wireguard configuration for interface {wg_interface} at system level: {str(ex)}", exc_info=True)
             return False
 
+        if recreate_interface:
+            self._logger.warning("apply config with recreate interface called")
+            if interface_exists:
+                await self.interface_down()
+            await self.interface_up()
+
+        else:
+            if interface_exists:
+                await self.interface_up()
+
         return success_state
 
     async def delete_config(self):
         """delete configuration file and clear interface
         """
+        if await self.interface_exists():
+            await self.interface_down()
+
         if os.path.exists(self._config_path):
             os.remove(self._config_path)
-
-    async def recreate_config(self):
-        """recreate configuration file and state
-        """
-        self._logger.warning("recreate configuration for {self._wg_interface_instance.intf_name}")
-        await self.delete_config()
-        await self.interface_down()
-        await self.init_config(force_overwrite=True)
-        await self.rebuild_peer_config()
-        await self.interface_up()
-        await self.apply_config()
-
-    async def update_interface_config(self):
-        """update peer configuration
-        """
-        self._logger.info("update peer configuration for {self._wg_interface_instance.intf_name}")
-        await self.init_config(force_overwrite=True)
-        await self.rebuild_peer_config()
-        await self.apply_config()
-
-    async def update_peer_config(self):
-        """update peer configuration
-        """
-        self._logger.info("update peer configuration for {self._wg_interface_instance.intf_name}")
-        await self.init_config()
-        await self.rebuild_peer_config()
-        await self.apply_config()

@@ -1,8 +1,9 @@
-import asyncio
-
+# pylint: disable=missing-class-docstring
 import pytest
 from fastapi.testclient import TestClient
 import wgconfig.wgexec
+
+import utils.wireguard
 
 
 def broken_function(*args, **kwargs) -> str:
@@ -15,10 +16,12 @@ class ProcessMock:
         return "stdout".encode("utf-8"), "stderr".encode("utf-8")
 
 
-async def create_subprocess_shell_mock(*args, **kwargs):
-    return ProcessMock()
+class WgSystemInfoAdapterMock:
+    async def get_wg_json(self, *args, **kwargs):
+        raise utils.wireguard.WgSystemInfoException("An Exception")
 
 
+@pytest.mark.usefixtures("disable_os_level_commands")
 class TestHealtcheckEndpoint:
     """
     Test Healthcheck API endpoint
@@ -42,7 +45,7 @@ class TestHealtcheckEndpoint:
     async def test_wg_json_failure(self, test_client: TestClient, monkeypatch):
         """test healthcheck if wg_json failed"""
         with monkeypatch.context() as m:
-            m.setattr(asyncio, "create_subprocess_shell", create_subprocess_shell_mock)
+            m.setattr(utils.wireguard, "WgSystemInfoAdapter", WgSystemInfoAdapterMock)
             response = await test_client.get("/api/healthcheck/")
             assert response.status_code == 500
             assert response.json()["detail"] == "healthcheck for wg-json failed"
