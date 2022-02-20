@@ -16,13 +16,28 @@ TODO: add how to use section
 
 The API to configure the Wireguard Interfaces is exposed at `/api` and the swagger documentation is available at `/docs`.
 
+## How to Build and Run the Container
+
+To build and start a production container, use the following commands on the repository root directory:
+
+```bash
+docker build -t localhost.local/wg-container-endpoint:dev .
+docker run --rm -it \
+    --cap-add=NET_ADMIN \
+    --cap-add=NET_RAW \
+    -p 443:8000 \
+    localhost.local/wg-container-endpoint:dev
+```
+
 ## How to develop
 
 ### Setup Development Environment
 
 Before starting, you need to install the python dependencies located at `requirements_dev.txt` optional within a `virtualenv`.
 
-For schema management, aerich is used together with Tortoise ORM. The aerich migration environment was already initialized using the following commands:
+### Database and Schema Migration
+
+For schema management, aerich is used together with Tortoise ORM. The aerich migration environment is already initialized with the following command:
 
 ```bash
 cd webapp
@@ -30,7 +45,7 @@ aerich init --tortoise-orm utils.config.TORTOISE_ORM
 aerich init-db
 ```
 
-To create a new migration for the project, use the following command:
+To create a new migration for the application, use the following command:
 
 ```bash
 aerich migrate --name <name of migration>
@@ -41,6 +56,8 @@ To migrate an existing database, use the following command:
 ```bash
 aerich upgrade
 ```
+
+This command is automatically run, if an instance of the Application is started as part of the `resources/runserver.bash` script.
 
 ### Run Development Server
 
@@ -56,7 +73,7 @@ uvicorn app.fast_api:create --factory --port=8000 --debug --host="0.0.0.0"
 
 ### Run Unit-Tests
 
-To run the testcases, use the following command:
+To run the unit-testcases, use the following command:
 
 ```bash
 cd webapp
@@ -64,26 +81,8 @@ pytest
 
 # or just rerun the last failed test cases
 pytest --lf
-
-# or use pytest watch
-ptw
 ```
 
-### Development Guidelines
+## Run E2E tests
 
-The following guidelines should apply to the development of this project:
-
-* when calling OS-level subprocesses (Linux only), use the `utils.generics.AsyncSubProcessMixin` and at least disable them using the `disable_os_level_commands` fixture within the pytest unit-tests
-
-## How to Build and Run the Container
-
-To build and start a production container, use the following commands on the repository root directory:
-
-```bash
-docker build -t localhost.local/wg-container-endpoint:dev .
-docker run --rm -it \
-    --cap-add=NET_ADMIN \
-    --cap-add=NET_RAW \
-    -p 443:8000 \
-    localhost.local/wg-container-endpoint:dev
-```
+To test End-to-End reachability, a NGINX test container that exposes IPv4 and IPv6 endpoints based on `nginxdemos/nginx-hello` is used and stored at `resources/nginx-hello-ipv6`.

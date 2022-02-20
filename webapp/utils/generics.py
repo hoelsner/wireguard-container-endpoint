@@ -1,8 +1,6 @@
 """
 generic utils for the application
 """
-import shlex
-import subprocess
 import logging
 from typing import Tuple
 
