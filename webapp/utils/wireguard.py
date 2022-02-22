@@ -2,6 +2,7 @@
 shared utilities for wireguard
 """
 import json
+import time
 import logging
 
 import wgconfig.wgexec
@@ -70,10 +71,61 @@ class WgKeyUtils(metaclass=utils.generics.SingletonMeta):
 
 class WgSystemInfoAdapter(utils.generics.AsyncSubProcessMixin, metaclass=utils.generics.SingletonMeta):
     """
-    read operational data for wireguard
+    read operational data for wireguard and extend based on this one
     """
+    # delta between the handshake and the current time before the peer is considered
+    # inactive
+    _time_delta_to_be_down = 60 * 2
+
     def __init__(self):
         self._logger = logging.getLogger("wg_sysinfo")
+
+    async def is_peer_active(self, wg_interface_name: str, public_key: str) -> bool:
+        """guess if the given peer is active on the given interface
+
+        :param wg_interface_name: interface, where the client should be active
+        :type wg_interface_name: str
+        :param public_key: public key to look for
+        :type public_key: str
+        :return: _description_
+        :rtype: bool
+        """
+        client_active = False
+        try:
+            op_data = await self.get_wg_json()
+            if wg_interface_name in op_data.keys():
+                peers_data = op_data[wg_interface_name]["peers"]
+                if public_key in peers_data.keys():
+                    peer_data = peers_data[public_key]
+                    if "latestHandshake" in peer_data:
+                        # if the peer handshake was within the last two minutes,
+                        # the client seems to be active
+                        time_delta = int(time.time()) - peer_data["latestHandshake"]
+                        if self._time_delta_to_be_down >= time_delta:
+                            self._logger.debug(f"peer '{public_key}' on interface '{wg_interface_name}' is considered ACTIVE (delta: {self._time_delta_to_be_down}>={time_delta})")
+                            client_active = True
+
+                        else:
+                            self._logger.debug(f"peer '{public_key}' on interface '{wg_interface_name}' is considered INACTIVE (delta: {self._time_delta_to_be_down}>={time_delta})")
+
+                    else:
+                        self._logger.debug(f"latestHandshake not found for peer peer '{public_key}' on interface '{wg_interface_name}'")
+
+                else:
+                    self._logger.warning(f"peer '{public_key}' on interface '{wg_interface_name}' not found")
+
+            else:
+                self._logger.error(f"interface '{wg_interface_name}' not found in op state")
+
+        except WgSystemInfoException:
+            self._logger.fatal("unable to identify active state for peer '{public_key}' on interface '{wg_interface_name}' (invalid data)", exc_info=True)
+            client_active = False
+
+        except Exception:
+            self._logger.fatal("unable to identify active state for peer '{public_key}' on interface '{wg_interface_name}' (unknown error)", exc_info=True)
+            client_active = False
+
+        return client_active
 
     async def get_wg_json(self) -> dict:
         """get raw response from the wireguard operational data
@@ -82,11 +134,12 @@ class WgSystemInfoAdapter(utils.generics.AsyncSubProcessMixin, metaclass=utils.g
         :rtype: dict
         """
         result = None
-        stdout, stderr, success = await self._execute_subprocess("wg-json")
-        if not success:
-            raise WgSystemInfoException("unable to run wg-json: {stderr}")
 
         try:
+            stdout, stderr, success = await self._execute_subprocess("wg-json")
+            if not success:
+                raise WgSystemInfoException("unable to run wg-json: {stderr}")
+
             result = json.loads(stdout.strip())
 
         except Exception as ex:

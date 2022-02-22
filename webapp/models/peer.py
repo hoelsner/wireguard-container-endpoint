@@ -1,6 +1,6 @@
 # pylint: disable=missing-class-docstring
 import re
-from typing import List, Optional, Type
+from typing import List, Optional, Type, TYPE_CHECKING
 
 import tortoise.fields
 import tortoise.validators
@@ -91,6 +91,18 @@ class WgPeerModel(tortoise.models.Model):
         :type ipv46_list: list
         """
         self.cidr_routes = ", ".join(value)
+
+    async def is_active(self) -> bool:
+        """identify if the peer is active
+
+        :return: _description_
+        :rtype: bool
+        """
+        wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+        return await wg_si_adapter.is_peer_active(
+            wg_interface_name=self.wg_interface.intf_name,
+            public_key=self.public_key
+        )
 
     def __str__(self):
         if self.friendly_name:

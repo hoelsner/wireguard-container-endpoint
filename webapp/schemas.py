@@ -104,7 +104,21 @@ WgInterfaceSchemaIn: Type[PydanticModel] = pydantic_model_creator(
 
 WgPeerSchema: Type[PydanticModel] = pydantic_model_creator(
     WgPeerModel,
-    name="WgPeerSchema"
+    name="WgPeerSchema",
+    include = [
+        "instance_id",
+        "wg_interface_id",
+        "wg_interface",
+        "public_key",
+        "friendly_name",
+        "description",
+        "persistent_keepalives",
+        "preshared_key",
+        "endpoint",
+        "cidr_routes",
+        "is_active"
+    ],
+    computed = ["is_active"],
 )
 WgPeerSchemaIn: Type[PydanticModel] = pydantic_model_creator(
     WgPeerModel,

@@ -1,12 +1,65 @@
-# pylint: disable=missing-function-docstring
-import pytest
+# pylint: disable=missing-function-docstring,unused-argument
+import json
+import time
 
+import pytest
 import wgconfig.wgexec
+
+import utils.os_func
 import utils.wireguard
 
 
 def broken_function(*args, **kwargs) -> str:
     raise Exception("An Exception")
+
+def mock_wg_json_command_invalid_format(command: str, **kwargs):
+    return "I'm not JSON", "", True
+
+def mock_wg_json_command_with_inactive_peer(command: str, **kwargs):
+    data = {
+        "wgvpn16": {
+                "privateKey": "4PSSsNFfYpqzJ3thGCeHd8pZWkZVdoJbm2G7oiA6TmQ=",
+                "publicKey": "yx0owjK+RWUD3ccSDBus7PA/B+WuVhSYUmEO9XAil0k=",
+                "listenPort": 51820,
+                "peers": {
+                        "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs=": {
+                                "presharedKey": "V4x0/xBvGj4/vAo7UIA5kYOMwvppI45lVgmAiiIhRaQ=",
+                                "endpoint": "172.29.0.1:62818",
+                                "latestHandshake": int(time.time()) - (60*2+1),
+                                "transferRx": 82224,
+                                "transferTx": 1680,
+                                "allowedIps": [
+                                        "172.29.1.16/32",
+                                        "fd00:1::16/128"
+                                ]
+                        }
+                }
+        }
+    }
+    return json.dumps(data, indent=4), "", True
+
+def mock_wg_json_command(command: str, **kwargs):
+    data = {
+        "wgvpn16": {
+                "privateKey": "4PSSsNFfYpqzJ3thGCeHd8pZWkZVdoJbm2G7oiA6TmQ=",
+                "publicKey": "yx0owjK+RWUD3ccSDBus7PA/B+WuVhSYUmEO9XAil0k=",
+                "listenPort": 51820,
+                "peers": {
+                        "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs=": {
+                                "presharedKey": "V4x0/xBvGj4/vAo7UIA5kYOMwvppI45lVgmAiiIhRaQ=",
+                                "endpoint": "172.29.0.1:62818",
+                                "latestHandshake": int(time.time()),
+                                "transferRx": 82224,
+                                "transferTx": 1680,
+                                "allowedIps": [
+                                        "172.29.1.16/32",
+                                        "fd00:1::16/128"
+                                ]
+                        }
+                }
+        }
+    }
+    return json.dumps(data, indent=4), "", True
 
 
 class TestWgKeyUtils:
@@ -60,8 +113,98 @@ class TestWgSystemInfoAdapter:
     """
     Test WgSystemInfoAdapter utility
     """
-    def test_read_function(self):
+    async def test_get_wg_json(self, monkeypatch):
         """test basic read function for the operational state
         """
-        # TODO: implement test cases for TestWgSystemInfoAdapter
-        pytest.skip("implement test case")
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            op_data = await wg_si_adapter.get_wg_json()
+            assert isinstance(op_data, dict)
+            assert "wgvpn16" in op_data.keys()
+
+    async def test_get_wg_json_with_error_command(self, monkeypatch):
+        """test what happens if the read of the operational state failed if the command failed
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", broken_function)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            with pytest.raises(utils.wireguard.WgSystemInfoException) as ex:
+                await wg_si_adapter.get_wg_json()
+
+            assert ex.match("unable to fetch operational data for wireguard")
+
+    async def test_get_wg_json_with_error_format(self, monkeypatch):
+        """test what happens if the read of the operational state failed if the format is broken
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command_invalid_format)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            with pytest.raises(utils.wireguard.WgSystemInfoException) as ex:
+                await wg_si_adapter.get_wg_json()
+
+            assert ex.match("unable to fetch operational data for wireguard")
+
+    async def test_is_peer_active_with_active_peer(self, monkeypatch):
+        """test is_peer_active with active peers
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            # peershould be, timestamp is current execution time
+            assert await wg_si_adapter.is_peer_active(
+                "wgvpn16",
+                "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs="
+            ) is True
+
+    async def test_is_peer_active_with_inactive_peer(self, monkeypatch):
+        """test is_peer_active with inactive peers
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command_with_inactive_peer)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            assert await wg_si_adapter.is_peer_active(
+                "wgvpn16",
+                "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs="
+            ) is False, await wg_si_adapter.get_wg_json()
+
+    async def test_is_peer_active_with_invalid_interface(self, monkeypatch):
+        """test is_peer_active with missing interface (should fail with log message and return False)
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            assert await wg_si_adapter.is_peer_active(
+                "wgvpn11",
+                "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs="
+            ) is False
+
+    async def test_is_peer_active_with_invalid_peer(self, monkeypatch):
+        """test is_peer_active with missing peer (should fail with log message and return False)
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            assert await wg_si_adapter.is_peer_active(
+                "wgvpn16",
+                "ImNotAValidPubkey"
+            ) is False
+
+    async def test_is_peer_active_with_broken_wg_conf(self, monkeypatch):
+        """test is_peer_active with broken wg_conf command (should fail with log message and return False)
+        """
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command_invalid_format)
+
+            wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
+            assert await wg_si_adapter.is_peer_active(
+                "wgvpn16",
+                "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs="
+            ) is False
