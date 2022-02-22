@@ -9,7 +9,7 @@ from fastapi import HTTPException
 import app.wg_config_adapter
 import models
 import schemas
-from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel, ValidationFailedResponseModel
+from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel, ValidationFailedResponseModel, ActiveResponseModel
 
 
 wireguard_router = fastapi.APIRouter()
@@ -118,7 +118,7 @@ async def delete_wg_interface(instance_id: str):
 @wireguard_router.get("/interface/peers", response_model=List[schemas.WgPeerSchema])
 async def get_wg_interface_peer_list():
     """
-    return a list of all peers
+    return a list of all WgPeerModels
     """
     return await schemas.WgPeerSchema.from_queryset(models.WgPeerModel.all())
 
@@ -132,7 +132,7 @@ async def get_wg_interface_peer_list():
 )
 async def create_wg_peer(data: schemas.WgPeerSchemaIn):
     """
-    create new peer
+    create new WgPeerModel
     """
     obj = await models.WgPeerModel.create(**data.dict(exclude_unset=True))
     return await schemas.WgPeerSchema.from_tortoise_orm(obj)
@@ -147,11 +147,28 @@ async def create_wg_peer(data: schemas.WgPeerSchemaIn):
 )
 async def get_wg_peer(instance_id: str):
     """
-    get WgInterface instance
+    get WgPeerModel instance
     """
     return await schemas.WgPeerSchema.from_queryset_single(
         models.WgPeerModel.get(instance_id=instance_id)
     )
+
+
+@wireguard_router.get(
+    "/interface/peers/{instance_id}/is_active",
+    response_model=ActiveResponseModel,
+    responses={
+        404: {"model": InstanceNotFoundErrorResponseModel}
+    }
+)
+async def get_is_peer_active(instance_id: str):
+    """
+    get state of the given peer
+    """
+    # required, because the is_active function is async and the pydantic model doesn't allow
+    # the use of async computed values
+    obj = await models.WgPeerModel.get(instance_id=instance_id)
+    return ActiveResponseModel(active=await obj.is_active())
 
 
 @wireguard_router.put(
@@ -164,7 +181,7 @@ async def get_wg_peer(instance_id: str):
 )
 async def update_wg_peer(instance_id: str, data: schemas.WgPeerSchemaIn):
     """
-    update existing WgInterface instance
+    update existing WgPeerModel instance
     """
     await models.WgPeerModel.filter(instance_id=instance_id).update(
         **data.dict(exclude_unset=True)
@@ -183,7 +200,7 @@ async def update_wg_peer(instance_id: str, data: schemas.WgPeerSchemaIn):
 )
 async def delete_wg_peer(instance_id: str):
     """
-    delete WgInterface instance
+    delete WgPeerModel instance
     """
 
     obj = await models.WgPeerModel.get_or_none(instance_id=instance_id)

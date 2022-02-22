@@ -115,10 +115,8 @@ WgPeerSchema: Type[PydanticModel] = pydantic_model_creator(
         "persistent_keepalives",
         "preshared_key",
         "endpoint",
-        "cidr_routes",
-        "is_active"
-    ],
-    computed = ["is_active"],
+        "cidr_routes"
+    ]
 )
 WgPeerSchemaIn: Type[PydanticModel] = pydantic_model_creator(
     WgPeerModel,

@@ -2,6 +2,13 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 
+class ActiveResponseModel(BaseModel):
+    """
+    model that contains just a active attribute
+    """
+    active: bool
+
+
 class MessageResponseModel(BaseModel):
     """
     model that contains just a message attribute

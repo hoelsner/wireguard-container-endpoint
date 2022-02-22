@@ -150,6 +150,28 @@ class TestWgPeerApi:
         json_data = response.json()
         assert json_data == data[0]
 
+    async def test_get_is_active_peer(self, test_client: TestClient, clean_db):
+        wgintf = await models.WgInterfaceModel.create(
+            intf_name="wg1",
+            cidr_addresses="10.1.1.1/24",
+            private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        )
+
+        peer = await models.WgPeerModel.create(
+            wg_interface=wgintf,
+            public_key="6Prv1yQ2Fh99Xhi4eUmPZnGox0VrLH88MFtdNXfM52E=",
+            cidr_routes="10.1.1.3/32"
+        )
+
+        # fetch list through API
+        response = await test_client.get(self.detail_api_endpoint.format(instance_id=str(peer.instance_id)) + "/is_active")
+        assert response.status_code == 200, response.text
+
+        data = response.json()
+        assert data == {
+            "active": False
+        }
+
     async def test_create_update_peer(self, test_client: TestClient, clean_db):
         """test create on API endpoint
         """

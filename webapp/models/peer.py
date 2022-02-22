@@ -95,14 +95,16 @@ class WgPeerModel(tortoise.models.Model):
     async def is_active(self) -> bool:
         """identify if the peer is active
 
-        :return: _description_
+        :return: True if the peer is considered active, otherwise False
         :rtype: bool
         """
         wg_si_adapter = utils.wireguard.WgSystemInfoAdapter()
-        return await wg_si_adapter.is_peer_active(
+        await self.fetch_related("wg_interface")
+        result = await wg_si_adapter.is_peer_active(
             wg_interface_name=self.wg_interface.intf_name,
             public_key=self.public_key
         )
+        return result
 
     def __str__(self):
         if self.friendly_name:
