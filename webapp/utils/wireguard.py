@@ -166,14 +166,15 @@ class IpRouteAdapter(metaclass=utils.generics.SingletonMeta):
         :param ip_network: [description]
         :type ip_network: str
         """
-        self.logger.info(f"add route {ip_network} for interface {intf_name}")
         try:
-            utils.os_func.configure_route(
+            operation_performed = utils.os_func.configure_route(
                 intf_name=intf_name,
                 ip_network=ip_network,
                 operation="add",
                 logger=self.logger
             )
+            if operation_performed:
+                self.logger.info(f"route {ip_network} for interface {intf_name} added")
 
         except Exception:
             # just log the error and ignore it silently
@@ -187,14 +188,15 @@ class IpRouteAdapter(metaclass=utils.generics.SingletonMeta):
         :param ip_network: [description]
         :type ip_network: str
         """
-        self.logger.info(f"remove route {ip_network} for interface {intf_name}")
         try:
-            utils.os_func.configure_route(
+            operation_performed = utils.os_func.configure_route(
                 intf_name=intf_name,
                 ip_network=ip_network,
                 operation="del",
                 logger=self.logger
             )
+            if operation_performed:
+                self.logger.info(f"route {ip_network} for interface {intf_name} removed")
 
         except Exception:
             # just log the error and ignore it silently
