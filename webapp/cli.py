@@ -2,7 +2,8 @@
 """
 Click command line utilties for management and development
 """
-import asyncio
+import os
+import shutil
 import click
 import uvicorn
 from functools import wraps
@@ -12,6 +13,15 @@ from tortoise import Tortoise
 @click.group()
 def cli():
     pass
+
+
+@cli.command()
+def clean_dev():
+    """clean dev server files
+    """
+    os.remove("db.sqlite3")
+    shutil.rmtree("tmp")
+    click.echo("dev server resetted")
 
 
 @cli.command()

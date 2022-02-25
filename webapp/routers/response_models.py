@@ -30,3 +30,16 @@ class ValidationFailedResponseModel(BaseModel):
     """
     detail: List
     body: Optional[Dict]
+
+
+class PingResponseModel(BaseModel):
+    """
+    Response model
+    """
+    success: bool
+    rtt_avg: str
+    rtt_avg_ms: str
+    rtt_max: str
+    rtt_max_ms: str
+    rtt_min: str
+    rtt_min_ms: str

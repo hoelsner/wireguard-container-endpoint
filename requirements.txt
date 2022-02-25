@@ -8,3 +8,4 @@ click==8.0.3
 aerich==0.6.2
 wgconfig==0.2.2
 pyroute2==0.6.6
+pythonping==1.1.1

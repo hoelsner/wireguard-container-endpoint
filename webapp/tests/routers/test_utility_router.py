@@ -1,6 +1,9 @@
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
 import json
 
 import pytest
+import pythonping
 from fastapi.testclient import TestClient
 import wgconfig.wgexec
 
@@ -110,3 +113,41 @@ async def test_get_wg_operational_data(test_client: TestClient, monkeypatch):
 
         json_data = response.json()
         assert "privateKey" not in json_data["wgvpn16"].keys(), "private key is not exposed"
+
+
+async def test_post_ping(test_client: TestClient, monkeypatch):
+    """test ping utility
+    """
+    def mock_ping(*args, **kwargs):
+        class MockPingResponse:
+            rtt_avg = 0.01
+            rtt_avg_ms = 0.01
+            rtt_max = 0.01
+            rtt_max_ms = 0.01
+            rtt_min = 0.01
+            rtt_min_ms = 0.01
+            def success(self):
+                return True
+
+        return MockPingResponse()
+
+    with monkeypatch.context() as m:
+        m.setattr(pythonping, "ping", mock_ping)
+
+        response = await test_client.post("/api/utils/ping/localhost")
+        assert response.status_code == 200
+
+        json_data = response.json()
+        assert json_data["success"] is True
+
+        response = await test_client.post("/api/utils/ping/www.google.de")
+        assert response.status_code == 200
+
+        json_data = response.json()
+        assert json_data["success"] is True
+
+        response = await test_client.post("/api/utils/ping/192.168.1.1")
+        assert response.status_code == 200
+
+        json_data = response.json()
+        assert json_data["success"] is True
