@@ -1,8 +1,35 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 import wgconfig.wgexec
 
 import utils.config
+import utils.os_func
+
+
+def mock_wg_json_command(command: str, **kwargs):
+    data = {
+        "wgvpn16": {
+                "privateKey": "4PSSsNFfYpqzJ3thGCeHd8pZWkZVdoJbm2G7oiA6TmQ=",
+                "publicKey": "yx0owjK+RWUD3ccSDBus7PA/B+WuVhSYUmEO9XAil0k=",
+                "listenPort": 51820,
+                "peers": {
+                        "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs=": {
+                                "presharedKey": "V4x0/xBvGj4/vAo7UIA5kYOMwvppI45lVgmAiiIhRaQ=",
+                                "endpoint": "172.29.0.1:62818",
+                                "latestHandshake": 200000000,
+                                "transferRx": 82224,
+                                "transferTx": 1680,
+                                "allowedIps": [
+                                        "172.29.1.16/32",
+                                        "fd00:1::16/128"
+                                ]
+                        }
+                }
+        }
+    }
+    return json.dumps(data, indent=4), "", True
 
 
 def wgexec_mock():
@@ -70,3 +97,16 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
             "debug": cu.debug
         }
         m.setenv("APP_VERSION", old_value)
+
+
+async def test_get_wg_operational_data(test_client: TestClient, monkeypatch):
+    """test get WG operational data
+    """
+    with monkeypatch.context() as m:
+        m.setattr(utils.os_func, "run_subprocess", mock_wg_json_command)
+
+        response = await test_client.get("/api/utils/wg/operational")
+        assert response.status_code == 200
+
+        json_data = response.json()
+        assert "privateKey" not in json_data["wgvpn16"].keys(), "private key is not exposed"

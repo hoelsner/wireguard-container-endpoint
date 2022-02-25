@@ -3,6 +3,7 @@ test models.peer module
 """
 import pytest
 from fastapi.testclient import TestClient
+from tortoise.exceptions import ValidationError
 
 import models
 
@@ -48,3 +49,11 @@ class TestWgPeerModel:
         assert isinstance(adr, list)
         assert len(adr) == 2
         assert adr == [ "10.1.1.3/32", "FE80::2/128" ]
+
+        with pytest.raises(ValidationError):
+            await models.WgPeerModel.create(
+                wg_interface=wgintf,
+                public_key="6Prv1yQ2Fh99Xhi4eUmPZnGox0VrLH88MFtdNXfM52E=",
+                cidr_routes="10.1.1.3/32",
+                friendly_name="###_--++$$"
+            )

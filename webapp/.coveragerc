@@ -1,12 +1,17 @@
 [run]
 omit =
     **/__main__.py
+    **/conftest.py
+    utils/os_func.py
     cli.py
 
 [report]
 exclude_lines =
     def __repr__
+    def __str__
     if self.DEBUG:
     config_util.debug
-    # cov-ignore
+    .* # cov-ignore
     @abstractmethod
+    except Exception as ex:
+    if not self.is_initialized():

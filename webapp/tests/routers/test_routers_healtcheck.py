@@ -10,12 +10,6 @@ def broken_function(*args, **kwargs) -> str:
     raise Exception("An Exception")
 
 
-class ProcessMock:
-    returncode: int = 128
-    async def communicate(self):
-        return "stdout".encode("utf-8"), "stderr".encode("utf-8")
-
-
 class WgSystemInfoAdapterMock:
     async def get_wg_json(self, *args, **kwargs):
         raise utils.wireguard.WgSystemInfoException("An Exception")

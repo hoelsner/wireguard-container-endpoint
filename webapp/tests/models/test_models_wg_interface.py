@@ -27,6 +27,13 @@ class TestWgInterfaceModel():
         assert obj.private_key is not None, "a random key is generated"
         assert obj.table == models.WgInterfaceTableEnum.AUTO
 
+        with pytest.raises(ValidationError):
+            await models.WgInterfaceModel.create(
+                intf_name="wg1",
+                cidr_addresses="510.1.1.1/24",
+                private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+            )
+
     async def test_base_object_defaults_with_multiple_cidr_addresses(self, test_client: TestClient, clean_db):
         """test basic use of the model class"""
         obj = await models.WgInterfaceModel.create(
@@ -68,6 +75,20 @@ class TestWgInterfaceModel():
             await models.WgInterfaceModel.create(
                 intf_name="wg1",
                 cidr_addresses="500.1.1.1/24",
+                private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+            )
+
+        with pytest.raises(ValidationError) as ex:
+            await models.WgInterfaceModel.create(
+                intf_name="wg1",
+                cidr_addresses="10.1.1.1/24,FD00:1/64",
+                private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+            )
+
+        with pytest.raises(ValidationError) as ex:
+            await models.WgInterfaceModel.create(
+                intf_name="wg1",
+                cidr_addresses="FD00:1/64",
                 private_key="cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
             )
 

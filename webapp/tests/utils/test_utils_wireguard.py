@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring,unused-argument
+# pylint: disable=missing-class-docstring,missing-function-docstring,unused-argument
 import json
 import time
 
@@ -208,3 +208,89 @@ class TestWgSystemInfoAdapter:
                 "wgvpn16",
                 "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs="
             ) is False
+
+
+@pytest.mark.usefixtures("disable_os_level_commands")
+class TestIpRouteAdapter:
+    def test_clean_ip_network(self):
+        """test internal cleanup method for ip networks
+        """
+        test_data_set = {
+            "10.1.1.1/24": "10.1.1.0/24",
+            "FD00::1/64": "fd00::/64",
+        }
+        ipr_adapter = utils.wireguard.IpRouteAdapter()
+        for test_value, expected_result in test_data_set.items():
+            assert expected_result == ipr_adapter._clean_ip_network(test_value)
+
+    def test_add_ip_route_performed(self, monkeypatch):
+        """test add ip route performed
+        """
+        def configure_route_true_mock(**kwargs):
+            return True
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "configure_route", configure_route_true_mock)
+
+            ipr_adapter = utils.wireguard.IpRouteAdapter()
+            assert ipr_adapter.add_ip_route("wg1", "10.1.1.1/24") is True
+
+    def test_add_ip_route_already_exist(self, monkeypatch):
+        """test add ip route existing
+        """
+        def configure_route_true_mock(**kwargs):
+            return False
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "configure_route", configure_route_true_mock)
+
+            ipr_adapter = utils.wireguard.IpRouteAdapter()
+            assert ipr_adapter.add_ip_route("wg1", "10.1.1.1/24") is False
+
+    def test_add_ip_route_failure(self, monkeypatch):
+        """test add ip route failure
+        """
+        def configure_route_true_mock(**kwargs):
+            raise Exception("An Exception")
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "configure_route", configure_route_true_mock)
+
+            ipr_adapter = utils.wireguard.IpRouteAdapter()
+            assert ipr_adapter.add_ip_route("wg1", "10.1.1.1/24") is False
+
+    def test_remove_ip_route_performed(self, monkeypatch):
+        """test remove ip route performed
+        """
+        def configure_route_true_mock(**kwargs):
+            return True
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "configure_route", configure_route_true_mock)
+
+            ipr_adapter = utils.wireguard.IpRouteAdapter()
+            assert ipr_adapter.remove_ip_route("wg1", "10.1.1.1/24") is True
+
+    def test_remove_ip_route_already_exist(self, monkeypatch):
+        """test remove ip route existing
+        """
+        def configure_route_true_mock(**kwargs):
+            return False
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "configure_route", configure_route_true_mock)
+
+            ipr_adapter = utils.wireguard.IpRouteAdapter()
+            assert ipr_adapter.remove_ip_route("wg1", "10.1.1.1/24") is False
+
+    def test_remove_ip_route_failure(self, monkeypatch):
+        """test remove ip route failure
+        """
+        def configure_route_true_mock(**kwargs):
+            raise Exception("An Exception")
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.os_func, "configure_route", configure_route_true_mock)
+
+            ipr_adapter = utils.wireguard.IpRouteAdapter()
+            assert ipr_adapter.remove_ip_route("wg1", "10.1.1.1/24") is False

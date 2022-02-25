@@ -56,12 +56,12 @@ async def get_wg_interface(instance_id: str):
 
 @wireguard_router.post(
     "/interfaces/{instance_id}/reconfigure",
-    response_model=schemas.WgInterfaceSchema,
+    response_model=MessageResponseModel,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel}
     }
 )
-async def get_wg_interface(instance_id: str):
+async def reconfigure_wg_interface(instance_id: str):
     """
     force apply interface configuration at system level (will temporary disrupt the wireguard connectivity)
     """

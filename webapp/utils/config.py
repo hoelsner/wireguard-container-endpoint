@@ -43,9 +43,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         """refresh configuration instance with current environment data
         """
         self.base_data_dir = os.environ.get("DATA_DIR", ".")
-        self.wg_config_dir = os.environ.get("WG_CONFIG_DIR", None)
-        if self.wg_config_dir is None:
-            self.wg_config_dir = "/etc/wireguard"
+        self.wg_config_dir = os.environ.get("WG_CONFIG_DIR", "/etc/wireguard")
 
         self.wg_tmp_dir = os.path.join(self.wg_config_dir, "tmp_files")
 

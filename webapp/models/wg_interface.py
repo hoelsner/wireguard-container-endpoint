@@ -86,7 +86,7 @@ class WgInterfaceModel(tortoise.models.Model):
         max_length=2048,
         null=False,
         validators=[
-            utils.tortoise.validators.CustomRegexValidator(utils.regex.IPV4_OR_IPV6_INTERFACE_CSV_LIST_REGEX, re.I)
+            utils.tortoise.validators.RegexOrNoneValidator(utils.regex.IPV4_OR_IPV6_INTERFACE_CSV_LIST_REGEX, re.I)
         ],
         description="comma separated list of IPv4/IPv6 addresses that are used on the wireguard interface"
     )

@@ -35,6 +35,7 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
         self._logger = logging.getLogger("wg_adapter")
         self._wg_interface_instance = wg_interface
 
+        os.makedirs(self._config.wg_config_dir, exist_ok=True)
         self._config_path = os.path.join(self._config.wg_config_dir, f"{self._wg_interface_instance.intf_name}.conf")
         self._wg_config = wgconfig.WGConfig(self._config_path)
 
@@ -54,6 +55,21 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
             return True
 
         return False
+
+    def get_config(self) -> str:
+        """return the content of the wireguard configuration file
+
+        :return: content of the wireguard configuration
+        :rtype: str
+        """
+        if not self.is_initialized():
+            return ""
+
+        with open(self._config_path, encoding="utf-8") as f:
+            content = f.read()
+
+        self._logger.debug(f"wireguard configuration read:\n{content}")
+        return content
 
     async def interface_exists(self) -> bool:
         """check if the interface exists on the system
@@ -123,7 +139,7 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
         :type force_overwrite: bool, optional
         """
         # initialize configuration if not exists
-        if self.is_initialized() or force_overwrite:
+        if not self.is_initialized() or force_overwrite:
             # reset the file
             self._wg_config.initialize_file(f"# configuration managed by script - please don't change - {self._wg_interface_instance.description} ({self._wg_interface_instance.instance_id})")
             self._wg_config.add_attr(None, "PrivateKey", self._wg_interface_instance.private_key, append_as_line=False)
@@ -262,7 +278,7 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
                 self._logger.debug(f"execute '{shell_command}'...")
                 out, err, success = await self._execute_subprocess(shell_command)
                 if not success:
-                    if "Unable to modify interface: Operation not permitted" in err:
+                    if "Unable to modify interface: Operation not permitted" in err:  # cov-ignore
                         self._logger.fatal("unable to update network configuration, permission denied")
 
                     self._logger.error(f"unable to update configuration for interface {wg_interface}\n{err}")
@@ -279,6 +295,7 @@ class WgConfigAdapter(utils.generics.AsyncSubProcessMixin):
             self._logger.warning("apply config with recreate interface called")
             if interface_exists:
                 await self.interface_down()
+
             await self.interface_up()
 
         else:

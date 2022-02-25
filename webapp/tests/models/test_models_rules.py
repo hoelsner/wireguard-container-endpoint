@@ -4,6 +4,7 @@ test rules models
 # pylint: disable=unused-argument
 import pytest
 from fastapi.testclient import TestClient
+from tortoise.exceptions import ValidationError
 
 import models
 
@@ -32,6 +33,13 @@ class TestIpv4FilterRuleModel:
 
         exp_rule = "iptables --delete FORWARD --in-interface %i --protocol tcp --dport 3000 --jump DROP"
         assert frm.to_iptables_rule(drop_rule=True) == exp_rule
+
+        with pytest.raises(ValidationError):
+            await models.Ipv4FilterRuleModel.create(
+                policy_rule_list=prl,
+                protocol=models.FilterProtocolEnum.TCP,
+                src_network="510.1.1.0/24"
+            )
 
     async def test_rule_with_ip_addresses(self, test_client: TestClient, clean_db):
         """test rule with IPv4 network filter
@@ -126,6 +134,12 @@ class TestIpv6FilterRuleModel:
         data = response.json()
         assert len(data) == 1
         assert data[0]["instance_id"] == str(frm.instance_id), response.text
+
+        with pytest.raises(ValidationError):
+            await models.Ipv6FilterRuleModel.create(
+                policy_rule_list=prl,
+                src_network="2001:DB8:0:/64",
+            )
 
 
 @pytest.mark.usefixtures("disable_os_level_commands")

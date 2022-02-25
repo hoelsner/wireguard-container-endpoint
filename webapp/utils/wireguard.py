@@ -3,6 +3,7 @@ shared utilities for wireguard
 """
 import json
 import time
+import ipaddress
 import logging
 
 import wgconfig.wgexec
@@ -143,7 +144,7 @@ class WgSystemInfoAdapter(utils.generics.AsyncSubProcessMixin, metaclass=utils.g
             result = json.loads(stdout.strip())
 
         except Exception as ex:
-            raise WgSystemInfoException("unable to fetch operational data for wireguard") from ex
+            raise WgSystemInfoException(f"unable to fetch operational data for wireguard ({ex})") from ex
 
         return result
 
@@ -158,18 +159,32 @@ class IpRouteAdapter(metaclass=utils.generics.SingletonMeta):
         self.logger = logging.getLogger("peer_tracking")
         self._config = utils.config.ConfigUtil()
 
-    def add_ip_route(self, intf_name: str, ip_network: str):
+    def _clean_ip_network(self, ip_network) -> str:
+        """clean ip_network parater
+
+        :param value: _description_
+        :type value: _type_
+        :return: _description_
+        :rtype: str
+        """
+        ip_network_clean = str(ipaddress.ip_interface(ip_network).network)
+        return ip_network_clean.lower()
+
+    def add_ip_route(self, intf_name: str, ip_network: str) -> bool:
         """add ip route to local routing table
 
         :param intf_name: [description]
         :type intf_name: str
         :param ip_network: [description]
         :type ip_network: str
+        :return: True if performed, otherwise False
+        :rtype: bool
         """
+        operation_performed = False
         try:
             operation_performed = utils.os_func.configure_route(
                 intf_name=intf_name,
-                ip_network=ip_network,
+                ip_network=self._clean_ip_network(ip_network),
                 operation="add",
                 logger=self.logger
             )
@@ -180,18 +195,23 @@ class IpRouteAdapter(metaclass=utils.generics.SingletonMeta):
             # just log the error and ignore it silently
             self.logger.error(f"unable to add route {ip_network} for {intf_name}", exc_info=self._config.debug)
 
-    def remove_ip_route(self, intf_name: str, ip_network: str):
+        return operation_performed
+
+    def remove_ip_route(self, intf_name: str, ip_network: str) -> bool:
         """remove the route from the given routing table
 
         :param intf_name: [description]
         :type intf_name: str
         :param ip_network: [description]
         :type ip_network: str
+        :return: True if performed, otherwise False
+        :rtype: bool
         """
+        operation_performed = False
         try:
             operation_performed = utils.os_func.configure_route(
                 intf_name=intf_name,
-                ip_network=ip_network,
+                ip_network=self._clean_ip_network(ip_network),
                 operation="del",
                 logger=self.logger
             )
@@ -201,3 +221,5 @@ class IpRouteAdapter(metaclass=utils.generics.SingletonMeta):
         except Exception:
             # just log the error and ignore it silently
             self.logger.error(f"unable to add route {ip_network} for {intf_name}", exc_info=self._config.debug)
+
+        return operation_performed

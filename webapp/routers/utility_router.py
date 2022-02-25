@@ -43,5 +43,8 @@ def generate_presharedkey():
 async def get_wg_operational_data():
     """get raw response from the wireguard json module
     """
-    # TODO: hide private-key on endpoint
-    return await utils.wireguard.WgSystemInfoAdapter().get_wg_json()
+    data = await utils.wireguard.WgSystemInfoAdapter().get_wg_json()
+    for interfaces in data.keys():
+        del data[interfaces]["privateKey"]
+
+    return data

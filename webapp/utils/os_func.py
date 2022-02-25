@@ -2,7 +2,6 @@
 module that contains all os dependent functions which are normally mocked
 as part of the unittests
 """
-import ipaddress
 import shlex
 import subprocess
 import logging
@@ -36,9 +35,9 @@ def run_subprocess(command: str, logger: logging.Logger) -> Tuple[str, str, bool
 def configure_route(intf_name: str, ip_network: str, operation: str, logger: logging.Logger) -> bool:
     """configure route on OS
 
-    :param intf_name: _description_
+    :param intf_name: interface name which should be used
     :type intf_name: str
-    :param ip_network: _description_
+    :param ip_network: target network for the route
     :type ip_network: str
     :param operation: "add" or "del"
     :type operation: str
@@ -64,7 +63,7 @@ def configure_route(intf_name: str, ip_network: str, operation: str, logger: log
 
     try:
         route_exists = False
-        if ip_network.lower() in system_routes:
+        if ip_network in system_routes:
             route_exists = True
 
         if operation == "add" and route_exists:
@@ -74,10 +73,9 @@ def configure_route(intf_name: str, ip_network: str, operation: str, logger: log
             logger.debug(f"route {ip_network} not found in table, skip delete call")
 
         else:
-            ip_network_clean = str(ipaddress.ip_interface(ip_network).network)
-            response = ip.route(operation, dst=ip_network_clean, oif=dev)
+            response = ip.route(operation, dst=ip_network, oif=dev)
             operation_performed = True
-            logger.debug(f"route operation {operation} for '{ip_network_clean}' response: {response}")
+            logger.debug(f"route operation {operation} for '{ip_network}' response: {response}")
 
     except NetlinkError as ex:
         # fails silent, because the input values are expected to be valid and there

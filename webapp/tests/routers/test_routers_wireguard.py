@@ -108,8 +108,23 @@ class TestWgInterfaceApi:
     async def test_wireguard_interface_reconfigure(self, test_client: TestClient, clean_db):
         """test reconfigure API call
         """
-        # TODO: implement test case for wireguard interface reconfigure API endpoint
-        pytest.skip("implement test case")
+        # create through API
+        response = await test_client.post(self.list_api_endpoint, json={
+            "intf_name": "wgvpn1",
+            "cidr_addresses": "192.168.1.1/32",
+            "private_key": "cFWqYCq2NUwUE4hq6l6mvXN9sDiIvxg1pBudO+iZTnI="
+        })
+        assert response.status_code == 200, response.text
+        data = response.json()
+
+        response = await test_client.post(
+            self.detail_api_endpoint.format(
+                instance_id=data["instance_id"]
+            ) + "/reconfigure",
+            json={}
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["message"] == "configuration applied"
 
 
 @pytest.mark.usefixtures("disable_os_level_commands")
