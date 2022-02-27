@@ -4,7 +4,8 @@ FastAPI router for common utilities
 import fastapi
 import pythonping
 
-from routers.response_models import PingResponseModel
+import app.auth
+from routers.response_models import PingResponseModel, DetailMessageResponseModel
 import utils.wireguard
 import utils.config
 
@@ -24,8 +25,16 @@ def get_instance_info():
     }
 
 
-@utility_router.post("/wg/generate/privkey")
-def generate_privkey():
+@utility_router.post(
+    "/wg/generate/privkey",
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+def generate_privkey(username: str = fastapi.Depends(app.auth.get_current_username)):
     """return a new private key
     """
     return {
@@ -33,8 +42,16 @@ def generate_privkey():
     }
 
 
-@utility_router.post("/wg/generate/presharedkey")
-def generate_presharedkey():
+@utility_router.post(
+    "/wg/generate/presharedkey",
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+def generate_presharedkey(username: str = fastapi.Depends(app.auth.get_current_username)):
     """generate a new preshared key
     """
     return {
@@ -42,8 +59,16 @@ def generate_presharedkey():
     }
 
 
-@utility_router.get("/wg/operational")
-async def get_wg_operational_data():
+@utility_router.get(
+    "/wg/operational",
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_wg_operational_data(username: str = fastapi.Depends(app.auth.get_current_username)):
     """get raw response from the wireguard json module
     """
     data = await utils.wireguard.WgSystemInfoAdapter().get_wg_json()
@@ -55,9 +80,15 @@ async def get_wg_operational_data():
 
 @utility_router.post(
     "/ping/{hostname}",
-    response_model=PingResponseModel
+    response_model=PingResponseModel,
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
 )
-async def post_ping(hostname: str):
+async def post_ping(hostname: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """send a ping to the given station and return True, if successful
     """
     config = utils.config.ConfigUtil()

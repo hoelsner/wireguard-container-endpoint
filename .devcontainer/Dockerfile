@@ -26,4 +26,5 @@ RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g madr" 2>&
 ENV DEBUG="True" \
     LOG_LEVEL="debug" \
     APP_VERSION="vscode-dev" \
-    WG_CONFIG_DIR="./tmp"
+    DATA_DIR="./tmp" \
+    WG_CONFIG_DIR="./tmp/wg"

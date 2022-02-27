@@ -1,6 +1,6 @@
 # WG Peer Routing
 
-* Status: proposed
+* Status: accepted
 * Date: 2022-02-20
 
 ## Context and Problem Statement

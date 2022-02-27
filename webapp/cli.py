@@ -19,8 +19,7 @@ def cli():
 def clean_dev():
     """clean dev server files
     """
-    os.remove("db.sqlite3")
-    shutil.rmtree("tmp")
+    shutil.rmtree(os.environ.get("DATA_DIR", "./tmp"))
     click.echo("dev server resetted")
 
 

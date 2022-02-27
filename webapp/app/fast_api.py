@@ -1,6 +1,8 @@
 """
 Start the Wireguard Container Endpoint (WGCE)
 """
+import os
+
 import tortoise
 from tortoise.exceptions import ValidationError,  DoesNotExist, IntegrityError
 from fastapi import FastAPI, status, Request
@@ -62,6 +64,10 @@ async def startup_app() -> None:
     """
     config_util = ConfigUtil()
     logger = LoggingUtil().logger
+
+    # print admin password if auto-generated
+    if os.environ.get("APP_ADMIN_PASSWORD", None) is None:
+        logger.warning(f"AUTO-GENERATED ADMIN PASSWORD IS AVAILABLE AT {config_util.self.admin_password_file}")
 
     # ORM initialize
     tortoise.Tortoise.init_models(
@@ -148,8 +154,8 @@ def create() -> FastAPI:
 
     # include routers
     fast_api.include_router(routers.healthcheck_router, prefix="/api/healthcheck", tags=["healthcheck"])
-    fast_api.include_router(routers.rules_router, prefix="/api/rules", tags=["rules"])
     fast_api.include_router(routers.wireguard_router, prefix="/api/wg", tags=["wireguard"])
+    fast_api.include_router(routers.rules_router, prefix="/api/rules", tags=["rules"])
     fast_api.include_router(routers.utility_router, prefix="/api/utils", tags=["utils"])
 
     log_util.logger.info("finished API application")

@@ -1,6 +1,6 @@
 # Data Model for the Application
 
-* Status: proposed
+* Status: accepted
 * Date: 2022-01-29
 
 ## Context and Problem Statement

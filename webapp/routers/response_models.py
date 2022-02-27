@@ -9,6 +9,13 @@ class ActiveResponseModel(BaseModel):
     active: bool
 
 
+class DetailMessageResponseModel(BaseModel):
+    """
+    detail message as response
+    """
+    detail: str
+
+
 class MessageResponseModel(BaseModel):
     """
     model that contains just a message attribute

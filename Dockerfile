@@ -37,6 +37,9 @@ ENV DATA_DIR="/opt/data" \
     APP_CORS_ORIGIN="*" \
     APP_CORS_METHODS="*" \
     APP_CORS_HEADERS="*" \
+    APP_ADMIN_USER="admin" \
+    # a random initial password is generated if variable is unset
+    #APP_ADMIN_PASSWORD="PlsChgMe" \
     LOG_LEVEL="info" \
     # unset UVICORN_SSL_KEYFILE to disable HTTPs
     UVICORN_SSL_KEYFILE="/opt/data/ssl/privkey.pem" \

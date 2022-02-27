@@ -9,6 +9,7 @@ import wgconfig.wgexec
 
 import utils.config
 import utils.os_func
+from base64 import b64encode
 
 
 def mock_wg_json_command(command: str, **kwargs):

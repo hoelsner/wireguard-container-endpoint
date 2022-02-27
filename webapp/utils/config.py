@@ -3,6 +3,7 @@ Configuration Interface
 """
 # pylint: disable=consider-using-f-string
 import os
+import uuid
 from typing import List
 from dotenv import load_dotenv
 import utils.generics
@@ -27,6 +28,8 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
     wg_config_dir: str
     wg_tmp_dir: str
     peer_tracking_timer: int
+    admin_user: str
+    admin_password_file: str
 
     def __init__(self):
         """
@@ -39,6 +42,25 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         load_dotenv()
         self.refresh_config()
 
+    @property
+    def admin_password(self) -> str:
+        """admin password
+        """
+        value = os.environ.get("APP_ADMIN_PASSWORD", None)
+
+        # if not set, create a password and write to backup file
+        if value is None:
+            if os.path.exists(self.admin_password_file):
+                with open(self.admin_password_file) as f:
+                    value = f.read()
+
+            else:
+                with open(self.admin_password_file, "w") as f:
+                    value = str(uuid.uuid4())
+                    f.write(value)
+
+        return value
+
     def refresh_config(self):
         """refresh configuration instance with current environment data
         """
@@ -46,6 +68,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         self.wg_config_dir = os.environ.get("WG_CONFIG_DIR", "/etc/wireguard")
 
         self.wg_tmp_dir = os.path.join(self.wg_config_dir, "tmp_files")
+        self.admin_password_file = os.path.join(self.base_data_dir, ".generated_password")
 
         self.db_url = "sqlite://{}".format(
             os.path.join(
@@ -62,6 +85,7 @@ class ConfigUtil(metaclass=utils.generics.SingletonMeta):
         self.cors_methods = os.environ.get("APP_CORS_METHODS", "*").split(",")
         self.cors_headers = os.environ.get("APP_CORS_HEADERS", "*").split(",")
         self.peer_tracking_timer = int(os.environ.get("APP_PEER_TRACKING_TIMER", "10"))
+        self.admin_user = os.environ.get("APP_ADMIN_USER", "admin")
 
         self.db_models = [
             "models.rules",

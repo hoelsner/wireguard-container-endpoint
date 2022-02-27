@@ -113,8 +113,8 @@ class TestIpv6FilterRuleModel:
     """
     Test Ipv6FilterRuleModel model
     """
-    async def test_rule_with_ip_addresses(self, test_client: TestClient, clean_db):
-        """test rule with IPv4 network filter
+    async def test_rule_with_ip_addresses(self, test_client: TestClient, clean_db, basic_auth_header):
+        """test rule with IPv6 network filter
         """
         prl = await models.PolicyRuleListModel.create(name="foo")
         frm = await models.Ipv6FilterRuleModel.create(
@@ -128,7 +128,7 @@ class TestIpv6FilterRuleModel:
         assert frm.__str__() == exp_rule
 
         # fetch through API
-        response = await test_client.get("/api/rules/filters/ipv6")
+        response = await test_client.get("/api/rules/filters/ipv6") #, headers=basic_auth_header)
         assert response.status_code == 200, response.text
 
         data = response.json()

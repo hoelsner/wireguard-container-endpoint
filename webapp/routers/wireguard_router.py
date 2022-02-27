@@ -6,17 +6,27 @@ from typing import List
 import fastapi
 from fastapi import HTTPException
 
+import app.auth
 import app.wg_config_adapter
 import models
 import schemas
-from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel, ValidationFailedResponseModel, ActiveResponseModel
+from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel, ValidationFailedResponseModel, ActiveResponseModel, DetailMessageResponseModel
 
 
 wireguard_router = fastapi.APIRouter()
 
 
-@wireguard_router.get("/interfaces", response_model=List[schemas.WgInterfaceSchema])
-async def get_wg_interface_list():
+@wireguard_router.get(
+    "/interfaces",
+    response_model=List[schemas.WgInterfaceSchema],
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_wg_interface_list(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of WgInterface
     """
@@ -27,10 +37,14 @@ async def get_wg_interface_list():
     "/interfaces",
     response_model=schemas.WgInterfaceSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_wg_interface(data: schemas.WgInterfaceSchemaIn):
+async def create_wg_interface(data: schemas.WgInterfaceSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new WgInterface
     """
@@ -42,10 +56,14 @@ async def create_wg_interface(data: schemas.WgInterfaceSchemaIn):
     "/interfaces/{instance_id}",
     response_model=schemas.WgInterfaceSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_wg_interface(instance_id: str):
+async def get_wg_interface(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get WgInterface instance
     """
@@ -58,10 +76,14 @@ async def get_wg_interface(instance_id: str):
     "/interfaces/{instance_id}/reconfigure",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def reconfigure_wg_interface(instance_id: str):
+async def reconfigure_wg_interface(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     force apply interface configuration at system level (will temporary disrupt the wireguard connectivity)
     """
@@ -81,10 +103,14 @@ async def reconfigure_wg_interface(instance_id: str):
     response_model=schemas.WgInterfaceSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_wg_interface(instance_id: str, data: schemas.WgInterfaceSchemaIn):
+async def update_wg_interface(instance_id: str, data: schemas.WgInterfaceSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing WgInterface instance
     """
@@ -100,10 +126,14 @@ async def update_wg_interface(instance_id: str, data: schemas.WgInterfaceSchemaI
     "/interfaces/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_wg_interface(instance_id: str):
+async def delete_wg_interface(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete WgInterface instance
     """
@@ -115,8 +145,17 @@ async def delete_wg_interface(instance_id: str):
     return MessageResponseModel(message=f"Deleted WgInterface {instance_id}")
 
 
-@wireguard_router.get("/interface/peers", response_model=List[schemas.WgPeerSchema])
-async def get_wg_interface_peer_list():
+@wireguard_router.get(
+    "/interface/peers",
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    },
+    response_model=List[schemas.WgPeerSchema]
+)
+async def get_wg_interface_peer_list(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of all WgPeerModels
     """
@@ -127,10 +166,14 @@ async def get_wg_interface_peer_list():
     "/interface/peers",
     response_model=schemas.WgPeerSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_wg_peer(data: schemas.WgPeerSchemaIn):
+async def create_wg_peer(data: schemas.WgPeerSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new WgPeerModel
     """
@@ -142,10 +185,14 @@ async def create_wg_peer(data: schemas.WgPeerSchemaIn):
     "/interface/peers/{instance_id}",
     response_model=schemas.WgPeerSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_wg_peer(instance_id: str):
+async def get_wg_peer(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get WgPeerModel instance
     """
@@ -158,10 +205,14 @@ async def get_wg_peer(instance_id: str):
     "/interface/peers/{instance_id}/is_active",
     response_model=ActiveResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_is_peer_active(instance_id: str):
+async def get_is_peer_active(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get state of the given peer
     """
@@ -176,10 +227,14 @@ async def get_is_peer_active(instance_id: str):
     response_model=schemas.WgPeerSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_wg_peer(instance_id: str, data: schemas.WgPeerSchemaIn):
+async def update_wg_peer(instance_id: str, data: schemas.WgPeerSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing WgPeerModel instance
     """
@@ -195,14 +250,17 @@ async def update_wg_peer(instance_id: str, data: schemas.WgPeerSchemaIn):
     "/interface/peers/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_wg_peer(instance_id: str):
+async def delete_wg_peer(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete WgPeerModel instance
     """
-
     obj = await models.WgPeerModel.get_or_none(instance_id=instance_id)
     if obj is None:
         raise HTTPException(status_code=404, detail=f"WgPeer {instance_id} not found")

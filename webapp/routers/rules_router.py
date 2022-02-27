@@ -2,18 +2,30 @@
 FastAPI router for rules model
 """
 from typing import List
+
 import fastapi
 from fastapi import HTTPException
+
+import app.auth
 import models
 import schemas
-from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel,ValidationFailedResponseModel
+from routers.response_models import MessageResponseModel, InstanceNotFoundErrorResponseModel,ValidationFailedResponseModel, DetailMessageResponseModel
 
 
 rules_router = fastapi.APIRouter()
 
 
-@rules_router.get("/filters/ipv4", response_model=List[schemas.Ipv4FilterRuleSchema])
-async def get_filters_ipv4():
+@rules_router.get(
+    "/filters/ipv4",
+    response_model=List[schemas.Ipv4FilterRuleSchema],
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_filters_ipv4(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of IPv4FilterRules
     """
@@ -24,10 +36,14 @@ async def get_filters_ipv4():
     "/filters/ipv4",
     response_model=schemas.Ipv4FilterRuleSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_filters_ipv4(data: schemas.Ipv4FilterRuleSchemaIn):
+async def create_filters_ipv4(data: schemas.Ipv4FilterRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new IPv4FilterRule
     """
@@ -39,10 +55,14 @@ async def create_filters_ipv4(data: schemas.Ipv4FilterRuleSchemaIn):
     "/filters/ipv4/{instance_id}",
     response_model=schemas.Ipv4FilterRuleSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_filter_ipv4_instance(instance_id: str):
+async def get_filter_ipv4_instance(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get IPv4FilterRule instance
     """
@@ -56,10 +76,14 @@ async def get_filter_ipv4_instance(instance_id: str):
     response_model=schemas.Ipv4FilterRuleSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_filter_ipv4_instance(instance_id: str, data: schemas.Ipv4FilterRuleSchemaIn):
+async def update_filter_ipv4_instance(instance_id: str, data: schemas.Ipv4FilterRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing IPv4FilterRule instance
     """
@@ -75,10 +99,14 @@ async def update_filter_ipv4_instance(instance_id: str, data: schemas.Ipv4Filter
     "/filters/ipv4/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_filter_ipv4_instance(instance_id: str):
+async def delete_filter_ipv4_instance(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete IPv4FilterRule instance
     """
@@ -90,8 +118,17 @@ async def delete_filter_ipv4_instance(instance_id: str):
     return MessageResponseModel(message=f"Deleted Ipv4FilterRule {instance_id}")
 
 
-@rules_router.get("/filters/ipv6", response_model=List[schemas.Ipv6FilterRuleSchema])
-async def get_filters_ipv6():
+@rules_router.get(
+    "/filters/ipv6",
+    response_model=List[schemas.Ipv6FilterRuleSchema],
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_filters_ipv6(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of IPv6FilterRuleModels
     """
@@ -102,10 +139,14 @@ async def get_filters_ipv6():
     "/filters/ipv6",
     response_model=schemas.Ipv6FilterRuleSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_filters_ipv6(data: schemas.Ipv6FilterRuleSchemaIn):
+async def create_filters_ipv6(data: schemas.Ipv6FilterRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new Ipv6FilterRuleModel
     """
@@ -117,10 +158,14 @@ async def create_filters_ipv6(data: schemas.Ipv6FilterRuleSchemaIn):
     "/filters/ipv6/{instance_id}",
     response_model=schemas.Ipv6FilterRuleSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_filter_ipv6_instance(instance_id: str):
+async def get_filter_ipv6_instance(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get Ipv6FilterRuleModel instance
     """
@@ -134,10 +179,14 @@ async def get_filter_ipv6_instance(instance_id: str):
     response_model=schemas.Ipv6FilterRuleSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_filter_ipv6_instance(instance_id: str, data: schemas.Ipv6FilterRuleSchemaIn):
+async def update_filter_ipv6_instance(instance_id: str, data: schemas.Ipv6FilterRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing Ipv6FilterRuleModel instance
     """
@@ -153,10 +202,14 @@ async def update_filter_ipv6_instance(instance_id: str, data: schemas.Ipv6Filter
     "/filters/ipv6/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_filter_ipv6_instance(instance_id: str):
+async def delete_filter_ipv6_instance(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete IPv6FilterRule instance
     """
@@ -168,8 +221,17 @@ async def delete_filter_ipv6_instance(instance_id: str):
     return MessageResponseModel(message=f"Deleted Ipv6FilterRule {instance_id}")
 
 
-@rules_router.get("/nat/ipv4", response_model=List[schemas.Ipv4NatRuleSchema])
-async def get_nat_ipv4_rules():
+@rules_router.get(
+    "/nat/ipv4",
+    response_model=List[schemas.Ipv4NatRuleSchema],
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_nat_ipv4_rules(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of Ipv4NatRuleModel
     """
@@ -180,10 +242,14 @@ async def get_nat_ipv4_rules():
     "/nat/ipv4",
     response_model=schemas.Ipv4NatRuleSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_nat_ipv4_rule(data: schemas.Ipv4NatRuleSchemaIn):
+async def create_nat_ipv4_rule(data: schemas.Ipv4NatRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new Ipv4NatRuleModel
     """
@@ -195,10 +261,14 @@ async def create_nat_ipv4_rule(data: schemas.Ipv4NatRuleSchemaIn):
     "/nat/ipv4/{instance_id}",
     response_model=schemas.Ipv4NatRuleSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_nat_ipv4_rule(instance_id: str):
+async def get_nat_ipv4_rule(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get Ipv4NatRuleModel instance
     """
@@ -212,10 +282,14 @@ async def get_nat_ipv4_rule(instance_id: str):
     response_model=schemas.Ipv4NatRuleSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_nat_ipv4_rule(instance_id: str, data: schemas.Ipv4NatRuleSchemaIn):
+async def update_nat_ipv4_rule(instance_id: str, data: schemas.Ipv4NatRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing Ipv4NatRuleModel instance
     """
@@ -231,10 +305,14 @@ async def update_nat_ipv4_rule(instance_id: str, data: schemas.Ipv4NatRuleSchema
     "/nat/ipv4/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_nat_ipv4_rule(instance_id: str):
+async def delete_nat_ipv4_rule(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete Ipv4NatRuleModel instance
     """
@@ -246,8 +324,17 @@ async def delete_nat_ipv4_rule(instance_id: str):
     return MessageResponseModel(message=f"Deleted Ipv4NatRule {instance_id}")
 
 
-@rules_router.get("/nat/ipv6", response_model=List[schemas.Ipv6NatRuleSchema])
-async def get_nat_ipv6_rules():
+@rules_router.get(
+    "/nat/ipv6",
+    response_model=List[schemas.Ipv6NatRuleSchema],
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_nat_ipv6_rules(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of Ipv6NatRuleModel
     """
@@ -258,10 +345,14 @@ async def get_nat_ipv6_rules():
     "/nat/ipv6",
     response_model=schemas.Ipv6NatRuleSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_nat_ipv6_rule(data: schemas.Ipv6NatRuleSchemaIn):
+async def create_nat_ipv6_rule(data: schemas.Ipv6NatRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new Ipv6NatRuleModel
     """
@@ -273,10 +364,14 @@ async def create_nat_ipv6_rule(data: schemas.Ipv6NatRuleSchemaIn):
     "/nat/ipv6/{instance_id}",
     response_model=schemas.Ipv6NatRuleSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_nat_ipv6_rule(instance_id: str):
+async def get_nat_ipv6_rule(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get Ipv6NatRuleModel instance
     """
@@ -290,10 +385,14 @@ async def get_nat_ipv6_rule(instance_id: str):
     response_model=schemas.Ipv6NatRuleSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_nat_ipv6_rule(instance_id: str, data: schemas.Ipv6NatRuleSchemaIn):
+async def update_nat_ipv6_rule(instance_id: str, data: schemas.Ipv6NatRuleSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing Ipv6NatRuleModel instance
     """
@@ -309,10 +408,14 @@ async def update_nat_ipv6_rule(instance_id: str, data: schemas.Ipv6NatRuleSchema
     "/nat/ipv6/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_nat_ipv6_rule(instance_id: str):
+async def delete_nat_ipv6_rule(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete Ipv6NatRuleModel instance
     """
@@ -324,8 +427,17 @@ async def delete_nat_ipv6_rule(instance_id: str):
     return MessageResponseModel(message=f"Deleted Ipv6NatRule {instance_id}")
 
 
-@rules_router.get("/policy_rule_list", response_model=List[schemas.PolicyRuleListSchema])
-async def get_policy_rule_list_entries():
+@rules_router.get(
+    "/policy_rule_list",
+    response_model=List[schemas.PolicyRuleListSchema],
+    responses={
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
+    }
+)
+async def get_policy_rule_list_entries(username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     return a list of PolicyRuleLists
     """
@@ -336,10 +448,14 @@ async def get_policy_rule_list_entries():
     "/policy_rule_list",
     response_model=schemas.PolicyRuleListSchema,
     responses={
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def create_policy_rule_list(data: schemas.PolicyRuleListSchemaIn):
+async def create_policy_rule_list(data: schemas.PolicyRuleListSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     create new PolicyRuleList
     """
@@ -351,10 +467,14 @@ async def create_policy_rule_list(data: schemas.PolicyRuleListSchemaIn):
     "/policy_rule_list/{instance_id}",
     response_model=schemas.PolicyRuleListSchema,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def get_policy_rule_list(instance_id: str):
+async def get_policy_rule_list(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     get PolicyRuleList instance
     """
@@ -368,10 +488,14 @@ async def get_policy_rule_list(instance_id: str):
     response_model=schemas.PolicyRuleListSchema,
     responses={
         404: {"model": InstanceNotFoundErrorResponseModel},
-        422: {"model": ValidationFailedResponseModel}
+        422: {"model": ValidationFailedResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def update_policy_rule_list(instance_id: str, data: schemas.PolicyRuleListSchemaIn):
+async def update_policy_rule_list(instance_id: str, data: schemas.PolicyRuleListSchemaIn, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     update existing PolicyRuleList instance
     """
@@ -387,10 +511,14 @@ async def update_policy_rule_list(instance_id: str, data: schemas.PolicyRuleList
     "/policy_rule_list/{instance_id}",
     response_model=MessageResponseModel,
     responses={
-        404: {"model": InstanceNotFoundErrorResponseModel}
+        404: {"model": InstanceNotFoundErrorResponseModel},
+        401: {
+            "description": "missing or invalid authentication provided on endpoint",
+            "model": DetailMessageResponseModel
+        }
     }
 )
-async def delete_policy_rule_list(instance_id: str):
+async def delete_policy_rule_list(instance_id: str, username: str = fastapi.Depends(app.auth.get_current_username)):
     """
     delete PolicyRuleList instance
     """
