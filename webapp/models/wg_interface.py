@@ -56,7 +56,7 @@ class WgInterfaceModel(tortoise.models.Model):
         default="",
         null=True,
         validators=[
-            utils.tortoise.validators.RegexOrNoneValidator("^[a-zA-Z0-9_]*$", re.I)
+            utils.tortoise.validators.RegexOrNoneValidator("^[a-zA-Z0-9_\-\s]*$", re.I)
         ],
         description="description within the wireguard configuration"
     )

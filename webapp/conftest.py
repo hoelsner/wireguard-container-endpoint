@@ -34,6 +34,13 @@ def disable_os_level_commands(monkeypatch):
         yield
 
 
+@pytest.fixture(scope="function", autouse=True)
+def skip_init_config(monkeypatch):
+    """skip initial configuration as part of the startup function
+    """
+    monkeypatch.setenv("SKIP_INIT_CONFIG", "1", prepend=False)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def create_test_dirs():
     """ensure that test dirs exist

@@ -4,15 +4,16 @@ Start the Wireguard Container Endpoint (WGCE)
 import os
 
 import tortoise
-from tortoise.exceptions import ValidationError,  DoesNotExist, IntegrityError
 from fastapi import FastAPI, status, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from tortoise.exceptions import ValidationError,  DoesNotExist, IntegrityError
 
 import app.wg_config_adapter
 import app.peer_tracking
+import app.init_config
 import models
 import routers
 from utils.config import ConfigUtil
@@ -67,7 +68,7 @@ async def startup_app() -> None:
 
     # print admin password if auto-generated
     if os.environ.get("APP_ADMIN_PASSWORD", None) is None:
-        logger.warning(f"AUTO-GENERATED ADMIN PASSWORD IS AVAILABLE AT {config_util.self.admin_password_file}")
+        logger.warning(f"AUTO-GENERATED ADMIN PASSWORD IS AVAILABLE AT {config_util.admin_password_file}")
 
     # ORM initialize
     tortoise.Tortoise.init_models(
@@ -95,6 +96,10 @@ async def startup_app() -> None:
         await instance.rebuild_peer_config()
         await instance.interface_up()
         await instance.apply_config()
+
+    # apply initial configuration
+    if os.environ.get("SKIP_INIT_CONFIG", "") == "":
+        await app.init_config.run()
 
 
 async def shutdown_app() -> None:
