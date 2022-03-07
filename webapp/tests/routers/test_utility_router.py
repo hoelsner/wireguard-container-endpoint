@@ -1,6 +1,8 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 import json
+import requests
+from urllib import request
 
 import pytest
 import pythonping
@@ -9,7 +11,6 @@ import wgconfig.wgexec
 
 import utils.config
 import utils.os_func
-from base64 import b64encode
 
 
 def mock_wg_json_command(command: str, **kwargs):
@@ -152,3 +153,40 @@ async def test_post_ping(test_client: TestClient, monkeypatch):
 
         json_data = response.json()
         assert json_data["success"] is True
+
+
+async def test_http_get_endpoint(test_client: TestClient, monkeypatch):
+    """test HTTP get utility
+    """
+    def mock_timeout_request(*args, **kwargs):
+        raise requests.exceptions.ConnectTimeout()
+
+    def mock_request(*args, **kwargs):
+        class RequestResponse:
+            status_code = 200
+            text = "Content"
+
+        return RequestResponse()
+
+    with monkeypatch.context() as m:
+        m.setattr(requests, "get", mock_request)
+
+        response = await test_client.post("/api/utils/http/get/", json={
+            "url": "https://localhost:8000",
+            "ssl_verify": True
+        })
+        assert response.status_code == 200
+        assert response.json() == {"content":"Content","status":200}
+
+    with monkeypatch.context() as m:
+        m.setattr(requests, "get", mock_timeout_request)
+
+        response = await test_client.post("/api/utils/http/get/", json={
+            "url": "https://localhost:8000",
+            "ssl_verify": True
+        })
+        assert response.status_code == 200
+        assert response.json() == {
+            "content": "destination not reachable",
+            "status": 500
+        }

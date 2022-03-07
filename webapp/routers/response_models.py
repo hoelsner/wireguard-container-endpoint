@@ -50,3 +50,19 @@ class PingResponseModel(BaseModel):
     rtt_max_ms: str
     rtt_min: str
     rtt_min_ms: str
+
+
+class UrlRequestModel(BaseModel):
+    """
+    request model for HTTP lookups
+    """
+    url: str
+    ssl_verify: bool
+
+
+class UrlResponseModel(BaseModel):
+    """
+    response model for HTTP lookups
+    """
+    content: str
+    status: int

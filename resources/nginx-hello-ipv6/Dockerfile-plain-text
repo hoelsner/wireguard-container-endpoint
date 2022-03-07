@@ -1,0 +1,3 @@
+FROM nginxdemos/hello:0.2-plain-text
+
+COPY ./hello-plain-text.conf /etc/nginx/conf.d/hello-plain-text.conf

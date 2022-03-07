@@ -27,10 +27,12 @@ RUN set -x \
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-VOLUME ["/opt/data"]
+#VOLUME ["/opt/data"]
 
 # configuration options for the container
 ENV DATA_DIR="/opt/data" \
+    # change the name of the app within the container
+    #APP_NAME="My Name" \
     APP_PORT=8000 \
     APP_HOST=0.0.0.0 \
     APP_VERSION="${BUILD_VERSION}" \

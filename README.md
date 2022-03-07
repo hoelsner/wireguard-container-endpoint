@@ -2,14 +2,6 @@
 
 The Container provides a REST API to configure Wireguard interfaces and iptable filter on a host. The intended Use-Cases/Scenarios are described [here](./docs/scenarios.md).
 
-## TO-DO
-
-* [ ] Docker based Wireguard VPN Hub/Endpoint that supports configuration via an a HTTP API (basic authentication with username and password)
-* [ ] route to another Wireguard Endpoint (Hub-Topology) within the Wireguard VPN
-* [ ] ability to connect to local container on the same Container Engine
-* [ ] update to the peer configuration should not affect the existing tunnels (hitless configuration update)
-* [ ] route to a local network outside the VPN [optional]
-
 ## How to use
 
 TODO: add how to use section
@@ -92,7 +84,7 @@ pytest --lf
 
 ## Run E2E tests
 
-To test End-to-End reachability, a NGINX test container that exposes IPv4 and IPv6 endpoints based on `nginxdemos/nginx-hello` is used and stored at `resources/nginx-hello-ipv6`.
+To run the end-to-end tests, follow the instructions at [test/README.md](tests/README.md). Within the end-to-end tests, a NGINX test container is created that exposes IPv4 and IPv6 endpoints based on `nginxdemos/nginx-hello`. The Dockerfile is available at `resources/nginx-hello-ipv6`.
 
 ### Build and Run the Container
 
@@ -104,5 +96,9 @@ docker run --rm -it \
     --cap-add=NET_ADMIN \
     --cap-add=NET_RAW \
     -p 443:8000 \
+    --sysctl net.ipv4.ip_forward=1 \
+    --sysctl net.ipv4.conf.all.src_valid_mark=1 \
+    --sysctl net.ipv6.conf.all.forwarding=1 \
+    --sysctl net.ipv6.conf.all.disable_ipv6=0 \
     localhost.local/wg-container-endpoint:dev
 ```
