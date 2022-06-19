@@ -3,17 +3,10 @@
 mkdir -p ${DATA_DIR}/ssl
 
 # apply DB migrations and start the webapp
-#aerich upgrade > /opt/aerich.log
+aerich upgrade > /opt/data/aerich.log
 
-if [ -z "$UVICORN_SSL_KEYFILE" ]
+if [ -z "$DISABLE_HTTPS" ]
 then
-    uvicorn app:create \
-        --factory \
-        --host=${APP_HOST} \
-        --port=${APP_PORT} \
-        --timeout-keep-alive=60
-
-else
     # generate certificates if not already available
     if [ -f "$UVICORN_SSL_KEYFILE" ]; then
         echo "keyfile found, skip generating a self singed certificate"
@@ -29,4 +22,12 @@ else
         --timeout-keep-alive=60 \
         --ssl-keyfile=${UVICORN_SSL_KEYFILE} \
         --ssl-certfile=${UVICORN_SSL_CERTFILE}
+
+else
+    uvicorn app:create \
+        --factory \
+        --host=${APP_HOST} \
+        --port=${APP_PORT} \
+        --timeout-keep-alive=60
+
 fi
