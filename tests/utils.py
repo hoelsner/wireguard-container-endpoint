@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 import docker
 
 
+TEST_HOST_IP = os.environ.get("TEST_HOST_IP", "127.0.0.1")
+
 @dataclass
 class ScenarioOneData:
     """configuration data for the test cases
@@ -15,8 +17,8 @@ class ScenarioOneData:
     image_name: str = "localhost.local/wg-container-endpoint"
     image_tag: str = "4testing"
     tmp_dir_base: str = "./tmp"
-    hub_api_endpoint: str = "https://localhost:8000"
-    client_1_api_endpoint: str = "https://localhost:8001"
+    hub_api_endpoint: str = f"https://{TEST_HOST_IP}:8000"
+    client_1_api_endpoint: str = f"https://{TEST_HOST_IP}:8001"
     hub_admin_endpoint: str = "https://172.29.1.1:8000"
     client_1_admin_endpoint: str = "https://172.29.1.16:8001"
 
@@ -40,10 +42,10 @@ class ScenarioTwoData:
     image_name: str = "localhost.local/wg-container-endpoint"
     image_tag: str = "4testing"
     tmp_dir_base: str = "./tmp"
-    hub_api_endpoint: str = "https://localhost:8000"
-    client_1_api_endpoint: str = "https://localhost:8001"
-    temp_hub_api_endpoint: str = "https://localhost:8002"
-    client_2_api_endpoint: str = "https://localhost:8003"
+    hub_api_endpoint: str = f"https://{TEST_HOST_IP}:8000"
+    client_1_api_endpoint: str = f"https://{TEST_HOST_IP}:8001"
+    temp_hub_api_endpoint: str = f"https://{TEST_HOST_IP}:8002"
+    client_2_api_endpoint: str = f"https://{TEST_HOST_IP}:8003"
 
     http_ping_ipv4_endpoint: str = "172.29.0.3"
     alt_http_ping_ipv6_endpoint: str = "FD00::0:3"
@@ -208,6 +210,24 @@ def create_scenario_1():
     wg_public_network.connect(wg_client_1_container)
     wg_client_1_container.start()
 
+    time.sleep(30)
+
+    # create peer on perm hub for client 2
+    perm_hub_interfaces = requests.get(
+        f"{scenario_data.hub_api_endpoint}/api/wg/interfaces",
+        verify=False,
+        auth=HTTPBasicAuth("wg_hub", "wg_hub")
+    ).json()
+    requests.post(f"{scenario_data.hub_api_endpoint}/api/wg/interface/peers", json={
+        # Private key 8H/dSh/s2sb1rOUiERJPLci+ggYCWhMaNViTmdC3rX4=
+        "public_key": "BOfvfui5k0KeGM8uVDf5jAcmCmM4i9Rk8URU+tkXwyI=",
+        "friendly_name": "Client 2",
+        "description": "",
+        "preshared_key": "VAh4Pvn05h9BM4wniYGr00FQYu7Lq8tCgh8YpxpaC8Y=",
+        "endpoint": "",
+        "cidr_routes": "172.29.1.32/32, fd00:1::32/128",
+        "wg_interface_id": [x for x in perm_hub_interfaces if x["intf_name"] == "wg16"][0]["instance_id"]
+    }, verify=False, auth=HTTPBasicAuth("wg_hub", "wg_hub"))
 
 def destroy_scenario_1():
     """destroy scenario 1 container and networks
@@ -501,7 +521,11 @@ def create_scenario_2():
     }, verify=False, auth=HTTPBasicAuth("wg_temp_hub", "wg_temp_hub"))
 
     # create temp hub on client 1
-    client_1_interfaces = requests.get(f"{scenario_data.client_1_api_endpoint}/api/wg/interfaces", verify=False, auth=HTTPBasicAuth("wg_spoke", "wg_spoke")).json()[0]
+    client_1_interfaces = requests.get(
+        f"{scenario_data.client_1_api_endpoint}/api/wg/interfaces",
+        verify=False,
+        auth=HTTPBasicAuth("wg_spoke", "wg_spoke")
+    ).json()[0]
     requests.post(f"{scenario_data.client_1_api_endpoint}/api/wg/interface/peers", json={
         "public_key": "KMFZz2cUuQx0Equ6ITTJOTt1qB/WFR8C/Yw7oYXsSAE=",
         "friendly_name": "temp hub",
@@ -514,9 +538,12 @@ def create_scenario_2():
     }, verify=False, auth=HTTPBasicAuth("wg_spoke", "wg_spoke"))
 
     # create peer on perm hub for client 2
-    perm_hub_interfaces = requests.get(f"{scenario_data.hub_api_endpoint}/api/wg/interfaces", verify=False, auth=HTTPBasicAuth("wg_hub", "wg_hub")).json()
+    perm_hub_interfaces = requests.get(
+        f"{scenario_data.hub_api_endpoint}/api/wg/interfaces",
+        verify=False,
+        auth=HTTPBasicAuth("wg_hub", "wg_hub")
+    ).json()
     requests.post(f"{scenario_data.hub_api_endpoint}/api/wg/interface/peers", json={
-        # Private key 8H/dSh/s2sb1rOUiERJPLci+ggYCWhMaNViTmdC3rX4=
         "public_key": "BOfvfui5k0KeGM8uVDf5jAcmCmM4i9Rk8URU+tkXwyI=",
         "friendly_name": "Client 2",
         "description": "",

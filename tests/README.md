@@ -15,6 +15,7 @@ To develop for this test cases, you can stage the environment using the followin
 
 ```bash
 $ cd tests
+$ export TEST_HOST_IP=127.0.0.1
 $ python3 cli.py create-scenario-1
 create containers for scenario 1...
 containers for scenario 1 created
@@ -22,14 +23,30 @@ containers for scenario 1 created
 $ python3 cli.py destroy-scenario-1
 ```
 
-
 ```bash
 $ cd tests
+$ export TEST_HOST_IP=127.0.0.1
 $ python3 cli.py create-scenario-2
 create containers for scenario 2...
 containers for scenario 2 created
 # destroy it using the following command
 $ python3 cli.py destroy-scenario-2
+```
+
+To change the target URL overwrite the IP address with the variable `TEST_HOST_IP` (e.g. `TEST_HOST_IP=192.168.164.38`).
+
+Within the scenarios, a test client on the hub is deployed that can be used with the following wireguard configuration file:
+
+```
+[Interface]
+PrivateKey = 8H/dSh/s2sb1rOUiERJPLci+ggYCWhMaNViTmdC3rX4=
+Address = 172.29.1.32/32, fd00:1::32/128
+
+[Peer]
+PublicKey = yx0owjK+RWUD3ccSDBus7PA/B+WuVhSYUmEO9XAil0k=
+PresharedKey = VAh4Pvn05h9BM4wniYGr00FQYu7Lq8tCgh8YpxpaC8Y=
+AllowedIPs = 172.29.0.0/24, 172.29.1.0/24, fd00::/64, fd00:1::/64
+Endpoint = <IP>:51820
 ```
 
 ## Scenario 1 (Hub-and-Spoke) test case
