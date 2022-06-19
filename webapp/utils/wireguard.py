@@ -74,15 +74,15 @@ class WgSystemInfoAdapter(utils.generics.AsyncSubProcessMixin, metaclass=utils.g
     """
     read operational data for wireguard and extend based on this one
     """
-    # delta between the handshake and the current time before the peer is considered
-    # inactive
+    # delta in seconds between the handshake and the current time before the peer is considered inactive
     _time_delta_to_be_down = 60 * 2
 
     def __init__(self):
         self._logger = logging.getLogger("wg_sysinfo")
 
     async def is_peer_active(self, wg_interface_name: str, public_key: str) -> bool:
-        """guess if the given peer is active on the given interface
+        """guess if the given peer is active on the given interface, considered as inactive
+        if the the latest_handshake is more than two minutes ago
 
         :param wg_interface_name: interface, where the client should be active
         :type wg_interface_name: str

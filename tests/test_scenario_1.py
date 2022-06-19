@@ -7,6 +7,7 @@ import time
 import docker
 import pytest
 import requests
+import requests.packages
 from requests.auth import HTTPBasicAuth
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -27,6 +28,19 @@ def client_basic_auth():
     return HTTPBasicAuth("wg_spoke", "wg_spoke")
 
 
+@pytest.fixture(scope="module")
+def use_scenario_1():
+    """setup and teardown of scenario one
+    """
+    logging.info("create environment for scenario 1")
+    utils.create_scenario_1()
+    time.sleep(60)
+    yield
+    logging.info("destroy environment for scenario 1")
+    utils.destroy_scenario_1()
+
+
+@pytest.mark.usefixtures("use_scenario_1")
 class TestScenarioOne:
     """
     test hub-and-spoke scenario according to docs/scenarios/scenario_1

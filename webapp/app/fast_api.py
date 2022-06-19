@@ -68,6 +68,8 @@ async def startup_app() -> None:
 
     # print admin password if auto-generated
     if os.environ.get("APP_ADMIN_PASSWORD", None) is None:
+        # try to access the admin password to generate a random password if required on startup
+        _ = config_util.admin_password
         logger.warning(f"AUTO-GENERATED ADMIN PASSWORD IS AVAILABLE AT {config_util.admin_password_file}")
 
     # ORM initialize
