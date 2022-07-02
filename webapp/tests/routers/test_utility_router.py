@@ -83,7 +83,7 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
     json_data = response.json()
     assert json_data == {
         "version": cu.app_version,
-        "name": "Wireguard Docker Endpoint",
+        "name": "Wireguard Container Endpoint",
         "debug": cu.debug
     }
 
@@ -98,7 +98,7 @@ async def test_get_instance_info(test_client: TestClient, monkeypatch):
         json_data = response.json()
         assert json_data == {
             "version": "MockedVersion",
-            "name": "Wireguard Docker Endpoint",
+            "name": "Wireguard Container Endpoint",
             "debug": cu.debug
         }
         m.setenv("APP_VERSION", old_value)

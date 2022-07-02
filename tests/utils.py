@@ -45,7 +45,6 @@ class ScenarioTwoData:
     hub_api_endpoint: str = f"https://{TEST_HOST_IP}:8000"
     client_1_api_endpoint: str = f"https://{TEST_HOST_IP}:8001"
     temp_hub_api_endpoint: str = f"https://{TEST_HOST_IP}:8002"
-    client_2_api_endpoint: str = f"https://{TEST_HOST_IP}:8003"
 
     http_ping_ipv4_endpoint: str = "172.29.0.3"
     alt_http_ping_ipv6_endpoint: str = "FD00::0:3"
@@ -210,9 +209,9 @@ def create_scenario_1():
     wg_public_network.connect(wg_client_1_container)
     wg_client_1_container.start()
 
-    time.sleep(30)
+    time.sleep(15)
 
-    # create peer on perm hub for client 2
+    # create peer on perm hub for the test client
     perm_hub_interfaces = requests.get(
         f"{scenario_data.hub_api_endpoint}/api/wg/interfaces",
         verify=False,
@@ -242,12 +241,12 @@ def destroy_scenario_1():
     client.networks.list(names="wg_public")[0].remove()
     shutil.rmtree(scenario_data.tmp_dir_base)
 
-
 def create_scenario_2():
     """create containers and networks for scenario 2
     """
     scenario_data = ScenarioTwoData()
     client = docker.from_env()
+    version_label = "scenario-2-test"
 
     os.makedirs(scenario_data.tmp_dir_base, exist_ok=True)
     os.makedirs(os.path.join(scenario_data.tmp_dir_base, "wg_hub"), exist_ok=True)
@@ -330,7 +329,7 @@ def create_scenario_2():
             "DEBUG": "False",
             "APP_NAME": "WG Perm Hub",
             "APP_PORT": "8000",
-            "APP_VERSION": "scenario-2-test",
+            "APP_VERSION": version_label,
             "APP_ADMIN_USER": "wg_hub",
             "APP_ADMIN_PASSWORD": "wg_hub",
             "LOG_LEVEL": "info",
@@ -389,7 +388,7 @@ def create_scenario_2():
             "DEBUG": "False",
             "APP_NAME": "WG Temp Hub",
             "APP_PORT": "8002",
-            "APP_VERSION": "scenario-2-test",
+            "APP_VERSION": version_label,
             "APP_ADMIN_USER": "wg_temp_hub",
             "APP_ADMIN_PASSWORD": "wg_temp_hub",
             "LOG_LEVEL": "info",
@@ -446,7 +445,7 @@ def create_scenario_2():
             "DEBUG": "False",
             "APP_NAME": "WG Client 1",
             "APP_PORT": "8001",
-            "APP_VERSION": "scenario-1-test",
+            "APP_VERSION": version_label,
             "APP_ADMIN_USER": "wg_spoke",
             "APP_ADMIN_PASSWORD": "wg_spoke",
             "LOG_LEVEL": "info",
@@ -476,7 +475,7 @@ def create_scenario_2():
     wg_client_1_container.start()
 
     # wait for some seconds to get all up and running, then configure the rest of the tunnels
-    time.sleep(30)
+    time.sleep(15)
 
     # create VPN interconnect on Permanent hub
     wg15_interface = requests.post(f"{scenario_data.hub_api_endpoint}/api/wg/interfaces", json={
@@ -499,7 +498,7 @@ def create_scenario_2():
     }, verify=False, auth=HTTPBasicAuth("wg_hub", "wg_hub"))
 
     # create wg14 on temporary hub
-    wg14_interface = requests.post(f"{scenario_data.temp_hub_api_endpoint}/api/wg/interfaces", json={
+    requests.post(f"{scenario_data.temp_hub_api_endpoint}/api/wg/interfaces", json={
         "intf_name": "wg14",
         "description": "client connect",
         "listen_port": 51819,
@@ -508,36 +507,7 @@ def create_scenario_2():
         "cidr_addresses": "172.29.1.2/32, FD00:1::2/128",
     }, verify=False, auth=HTTPBasicAuth("wg_temp_hub", "wg_temp_hub")).json()
 
-    # create client entry on temporary hub
-    requests.post(f"{scenario_data.temp_hub_api_endpoint}/api/wg/interface/peers", json={
-        "public_key": "s5WDa5TV/DeXYLQZfXG4RD1/eGPt2rkDMGB1Z379ZQs=",
-        "friendly_name": "client 1",
-        "description": "",
-        "persistent_keepalives": 5,
-        "preshared_key": "V4x0/xBvGj4/vAo7UIA5kYOMwvppI45lVgmAiiIhRaQ=",
-        "endpoint": "",
-        "cidr_routes": "172.29.1.16/32, FD00:1::16/128",
-        "wg_interface_id": wg14_interface["instance_id"]
-    }, verify=False, auth=HTTPBasicAuth("wg_temp_hub", "wg_temp_hub"))
-
-    # create temp hub on client 1
-    client_1_interfaces = requests.get(
-        f"{scenario_data.client_1_api_endpoint}/api/wg/interfaces",
-        verify=False,
-        auth=HTTPBasicAuth("wg_spoke", "wg_spoke")
-    ).json()[0]
-    requests.post(f"{scenario_data.client_1_api_endpoint}/api/wg/interface/peers", json={
-        "public_key": "KMFZz2cUuQx0Equ6ITTJOTt1qB/WFR8C/Yw7oYXsSAE=",
-        "friendly_name": "temp hub",
-        "description": "",
-        "persistent_keepalives": 5,
-        "preshared_key": "V4x0/xBvGj4/vAo7UIA5kYOMwvppI45lVgmAiiIhRaQ=",
-        "endpoint": "wg_temp_hub:51819",
-        "cidr_routes": "172.29.0.16/28, fd00::1:0/112",
-        "wg_interface_id": client_1_interfaces["instance_id"]
-    }, verify=False, auth=HTTPBasicAuth("wg_spoke", "wg_spoke"))
-
-    # create peer on perm hub for client 2
+    # create peer on perm hub for the test client
     perm_hub_interfaces = requests.get(
         f"{scenario_data.hub_api_endpoint}/api/wg/interfaces",
         verify=False,
