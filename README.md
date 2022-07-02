@@ -16,12 +16,12 @@ docker run -d \
     --sysctl net.ipv4.conf.all.src_valid_mark=1 \
     --sysctl net.ipv6.conf.all.forwarding=1 \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
-    hoelsner/wireguard-container-endpoint:latest
+    docker.io/hoelsner/wireguard-container-endpoint:latest
 ```
 
-The sysctl settings are required to support routing and IPv6 within the Container. By default, a new instance will use a `admin` user together with a random password that is stored at `/opt/data/.generated_password`.
+The sysctl settings are required to support routing and IPv6 within the Container. By default, a new instance will use a `admin` user together with a random password that is stored at `/opt/data/.generated_password` (retrive with `docker exec -it wgce /bin/bash -c "cat /opt/data/.generated_password"`). You can also specify the admin password as `APP_ADMIN_PASSWORD` environment variable, if you want to use a predefined value.
 
-The API to configure the Wireguard Interfaces and filters is exposed with this configuration at `https://127.0.0.1:8000/api` and the OpenAPI/Swagger documentation is available at `https://127.0.0.1:8000/docs`.
+The API to configure the Wireguard Interfaces and filters is exposed by default at `https://127.0.0.1:8000/api` and the OpenAPI/Swagger documentation is available at `https://127.0.0.1:8000/docs`.
 
 ### Application Configuration
 
@@ -75,7 +75,15 @@ The following environment variables are available for intiial configuration of a
 
 ### Setup Development Environment
 
-Before starting, you need to install python 3.8 together with the dependencies located at `requirements_dev.txt` (optionally within a `virtualenv`).
+Before starting, you need to install python 3.8 on a linux or macos machine together with the dependencies located at `requirements_dev.txt` (optionally within a `virtualenv`).
+
+Parts of the application depends on the following packages that must be installed:
+
+```bash
+sudo apt-get install -y wireguard wireguard-tools
+```
+
+The repository also contains a vscode development Container, which was primarily used during the development. See https://code.visualstudio.com/docs/remote/containers for additional information.
 
 ### Database and Schema Migration
 
