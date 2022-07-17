@@ -19,7 +19,7 @@ def validate_ipv4_network(value: str):
         ipaddress.IPv4Network(value)
 
     except ValueError:
-        raise ValidationError(f"'{value}' is not a valid IPv4 address.")
+        raise ValidationError(f"'{value}' is not a valid IPv4 address.") from ValueError
 
 
 def validate_ipv6_network(value: str):
@@ -32,7 +32,7 @@ def validate_ipv6_network(value: str):
         ipaddress.IPv6Network(value)
 
     except ValueError:
-        raise ValidationError(f"'{value}' is not a valid IPv6 address.")
+        raise ValidationError(f"'{value}' is not a valid IPv6 address.") from ValueError
 
 
 class RegexOrNoneValidator(Validator):
@@ -45,6 +45,6 @@ class RegexOrNoneValidator(Validator):
         self.pattern = pattern
 
     def __call__(self, value: Any):
-        if value is not None:
+        if value is not None and value != "":
             if not self.regex.match(value):
                 raise ValidationError(f"Value '{value}' does not match regex '{self.regex.pattern}'")

@@ -81,7 +81,7 @@ class WgPeerModel(tortoise.models.Model):
         :return: [description]
         :rtype: List
         """
-        return [x.strip() for x in self.cidr_routes.split(",")]
+        return [x.strip() for x in self.cidr_routes.split(",") if x != ""]
 
     @cidr_routes_list.setter
     def cidr_routes_list(self, value: list) -> None:
