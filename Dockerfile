@@ -15,10 +15,10 @@ RUN set -x \
         iputils-ping \
         iptables=1.8.4-3ubuntu2 \
         nano=4.8-1ubuntu1 \
-        python3.8=3.8.10-0ubuntu1~20.04.4 \
-        python3-pip=20.0.2-5ubuntu1.6 \
-        wireguard=1.0.20200513-1~20.04.2 \
-        wireguard-tools=1.0.20200513-1~20.04.2 \
+        python3.8 \
+        python3-pip \
+        wireguard \
+        wireguard-tools \
 	&& apt-get clean autoclean \
 	&& apt-get autoremove -y \
     && chmod 755 /bin/wg-json  \
