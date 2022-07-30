@@ -45,6 +45,6 @@ class RegexOrNoneValidator(Validator):
         self.pattern = pattern
 
     def __call__(self, value: Any):
-        if value is not None and value != "":
+        if value is not None:
             if not self.regex.match(value):
                 raise ValidationError(f"Value '{value}' does not match regex '{self.regex.pattern}'")

@@ -16,6 +16,6 @@ Partial Mesh topology using a permanent Hub together with some additional tempor
 
 ![](scenario_2/scenario_2.drawio.svg)
 
-**With Wireguard**, full connectivity is only possible when all tunnels are active. To provide some basic redundancy for a Client, a "dynamic peer route" function needs to be implemented. This should inject the routes into the local routing table based on the tunnel state on the Tempoda Hub from the scenario.
+**With Wireguard**, full connectivity is only possible when all tunnels are active. To provide some basic redundancy for a Client, a "dynamic peer route" function needs to be implemented. This should inject the routes into the local routing table based on the tunnel state on the temporary Hub from the scenario.
 
 The manual configuration is explained [here](scenario_2/manual_configuration.md).

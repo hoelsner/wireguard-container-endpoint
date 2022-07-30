@@ -20,12 +20,6 @@ Address = 172.29.1.1/32, FD00:1::1/128
 ListenPort = 51820
 PrivateKey = 4PSSsNFfYpqzJ3thGCeHd8pZWkZVdoJbm2G7oiA6TmQ=
 
-# INPUT for traffic to this container, FORWARD for routed traffic
-#PostUp =   iptables -A INPUT -i %i -p tcp --dport 1:1023 -s 172.29.1.0/24 -j DROP; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-#PostDown = iptables -D INPUT -i %i -p tcp --dport 1:1023 -s 172.29.1.0/24 -j DROP; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-#PostUp   = ip6tables -A INPUT -i %i -p tcp --dport 1:1023 -s FD00:1::0:/112 -j DROP; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-#PostDown = ip6tables -D INPUT -i %i -p tcp --dport 1:1023 -s FD00:1::0:/112 -j DROP; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-
 PostUp =   iptables -A FORWARD -i %i -p tcp --dport 1:1023 -s 172.29.1.0/24 ! -d 172.29.0.0/24 -j DROP; iptables -A FORWARD -i %i -p tcp --dport 8888 -s 172.29.1.0/24 -d 172.29.0.0/24 -j DROP; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 PostDown = iptables -D FORWARD -i %i -p tcp --dport 1:1023 -s 172.29.1.0/24 ! -d 172.29.0.0/24 -j DROP; iptables -D FORWARD -i %i -p tcp --dport 8888 -s 172.29.1.0/24 -d 172.29.0.0/24 -j DROP; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
