@@ -5,6 +5,6 @@ pytest-asyncio==0.17.2
 pytest-env==0.6.2
 pytest-cov==3.0.0
 pytest-watch==4.2.0
-httpx==0.22.0
+httpx==0.23.0
 docker==5.0.3
 pylint==2.14.4
