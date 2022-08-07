@@ -1,6 +1,6 @@
-# Wireguard Container Endpoint (WGCE)
+# WireGuard Container Endpoint (WGCE)
 
-This Container provides a REST API to configure Wireguard interfaces and filters based on iptables on a host (for IPv4 and IPv6). The intended Use-Cases/Scenarios are described [here](./docs/scenarios.md).
+This Container provides a REST API to configure WireGuard interfaces and filters based on iptables on a host (for IPv4 and IPv6). The intended Use-Cases/Scenarios are described [here](./docs/scenarios.md).
 
 ## How to use
 
@@ -21,7 +21,7 @@ docker run -d \
 
 The sysctl settings are required to support routing and IPv6 within the Container. By default, a new instance will use a `admin` user together with a random password that is stored at `/opt/data/.generated_password` (retrieve with `docker exec -it wgce /bin/bash -c "cat /opt/data/.generated_password"`). You can also specify the admin password as `APP_ADMIN_PASSWORD` environment variable, if you want to use a predefined value.
 
-The API to configure the Wireguard Interfaces and filters is exposed by default at `https://127.0.0.1:8000/api` and the OpenAPI/Swagger documentation is available at `https://127.0.0.1:8000/docs`.
+The API to configure the WireGuard Interfaces and filters is exposed by default at `https://127.0.0.1:8000/api` and the OpenAPI/Swagger documentation is available at `https://127.0.0.1:8000/docs`.
 
 ### Application Configuration
 
@@ -48,24 +48,24 @@ The following table describes the configuration values for the container.
 | `APP_CORS_HEADERS`        | CORS headers setting for FastAPI                                                                                                                                                                                                 | ---                           | `*`                           |
 | `DISABLE_HTTPS`           | set this environment variable to any value will disable HTTPs on the admin interface (not recommended)                                                                                                                           | ---                           | *unset*                       |
 | `DEBUG`                   | enables the debug mode for the application (only for development)                                                                                                                                                                | `False`                       | `False`                       |
-| `WG_CONFIG_DIR`           | location, where the wireguard configuration files should be stored *(should not be changed)*                                                                                                                                     | `/etc/wireguard`              | `/etc/wireguard`              |
+| `WG_CONFIG_DIR`           | location, where the WireGuard configuration files should be stored *(should not be changed)*                                                                                                                                     | `/etc/wireguard`              | `/etc/wireguard`              |
 | `DATA_DIR`                | data directory where all information from the container are stored *(should not be changed)*                                                                                                                                    | ---                           | `/opt/data`                   |
 
 ### Initial Configuration
 
-The following environment variables are required to preconfigure the Container with an Wireguard interface and peer:
+The following environment variables are required to configure the Container at the first boot with an Wireguard interface and peer:
 
 | Name                             | Description                                                                                                            | default value | example value                                  |
 |----------------------------------|------------------------------------------------------------------------------------------------------------------------|---------------|------------------------------------------------|
-| `INIT_INTF_NAME`                 | Initial wireguard Interface                                                                                            | ---           | `wg16`                                         |
+| `INIT_INTF_NAME`                 | initial WireGuard Interface                                                                                            | ---           | `wg16`                                         |
 | `INIT_INTF_LISTEN_PORT`          | port for the interface                                                                                                 | `51820`       | `51820`                                        |
 | `INIT_INTF_PRIVATE_KEY`          | private key for the interface                                                                                          | ---           | `gGIwjTnOwUw7tTnNciJDHk5m8+BVUYNMrsx5TFkXVUA=` |
 | `INIT_INTF_CIDR_ADDRESSES`       | IPv4/IPv6 addresses on the interface                                                                                   | ---           | `10.1.1.1/32, FD00:1::1/128`                   |
 | `INIT_POLICY_NAME`               | policy name for the interface                                                                                          | `base policy` | `base policy`                                  |
 | `INIT_POLICY_NAT_ENABLE`         | enable IPv4/IPv6 NAT                                                                                                   | `False`       | `False`                                        |
-| `INIT_POLICY_ALLOW_ADMIN`        | allow access to wireguard Admin Interface thought the wireguard interface                                              | `True`        | `True`                                         |
+| `INIT_POLICY_ALLOW_ADMIN`        | allow access to WireGuard Admin Interface thought the WireGuard interface                                              | `True`        | `True`                                         |
 | `INIT_PEER_PUBLIC_KEY`           | public key of the first peer                                                                                           | ---           | `gGIwjTnOwUw7tTnNciJDHk5m8+BVUYNMrsx5TFkXVUA=` |
-| `INIT_PEER_PERSISTENT_KEEPALIVE` | wireguard keepalive for peers                                                                                          | `30`          | `60`                                           |
+| `INIT_PEER_PERSISTENT_KEEPALIVE` | WireGuard keepalive for peers                                                                                          | `30`          | `60`                                           |
 | `INIT_PEER_ENDPOINT`             | target host for the peer connection                                                                                    | ---           | `example.host.com:51820`                       |
 | `INIT_PEER_CIDR_ROUTES`          | routes/remote targets that are reachable via the peer                                                                  | ---           | `10.1.1.1/32, FD00:1::1/128`                   |
 

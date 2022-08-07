@@ -119,11 +119,11 @@ class WgSystemInfoAdapter(utils.generics.AsyncSubProcessMixin, metaclass=utils.g
                 self._logger.error(f"interface '{wg_interface_name}' not found in op state")
 
         except WgSystemInfoException:
-            self._logger.fatal("unable to identify active state for peer '{public_key}' on interface '{wg_interface_name}' (invalid data)", exc_info=True)
+            self._logger.fatal(f"unable to identify active state for peer '{public_key}' on interface '{wg_interface_name}' (invalid data)", exc_info=True)
             client_active = False
 
         except Exception:
-            self._logger.fatal("unable to identify active state for peer '{public_key}' on interface '{wg_interface_name}' (unknown error)", exc_info=True)
+            self._logger.fatal(f"unable to identify active state for peer '{public_key}' on interface '{wg_interface_name}' (unknown error)", exc_info=True)
             client_active = False
 
         return client_active

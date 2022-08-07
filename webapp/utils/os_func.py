@@ -20,7 +20,7 @@ def run_subprocess(command: str, logger: logging.Logger) -> Tuple[str, str, bool
     :rtype: Tuple[str, str, bool]
     """
     success_state = True
-    proc = subprocess.Popen(shlex.split(command), stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(shlex.split(command), stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     stdout, stderr = proc.communicate(input=None)
     proc.wait()
     logger.debug(f"[{command!r} exited with {proc.returncode}]")
@@ -83,4 +83,5 @@ def configure_route(intf_name: str, ip_network: str, operation: str, logger: log
         logger.error(f"failed to add route: {ex}")
         raise ex
 
+    ip.close()
     return operation_performed
