@@ -11,6 +11,7 @@ docker run -d \
     --name=wgce \
     --cap-add=NET_ADMIN \
     -p 8000:8000 \
+    -p 51820:51820/udp \
     --volume wgce_data:/opt/data \
     --sysctl net.ipv4.ip_forward=1 \
     --sysctl net.ipv4.conf.all.src_valid_mark=1 \
