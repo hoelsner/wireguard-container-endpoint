@@ -1,6 +1,6 @@
 # dockerfile for the Wireguard Container Endpoint
 # container required cap-add=NET_ADMIN and cap-add=NET_RAW to work properly
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Version that is displayed inside the container for the application
 ARG BUILD_VERSION=undefined
@@ -13,9 +13,9 @@ RUN set -x \
         inetutils-traceroute \
         iproute2 \
         iputils-ping \
-        iptables=1.8.4-3ubuntu2 \
-        nano=4.8-1ubuntu1 \
-        python3.8 \
+        iptables \
+        nano \
+        python3.10 \
         python3-pip \
         wireguard \
         wireguard-tools \

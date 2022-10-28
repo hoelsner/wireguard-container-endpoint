@@ -81,7 +81,7 @@ Furthermore, the following options may be required if NAT or a PSK should be use
 
 ### Setup Development Environment
 
-Before starting, you need to install python 3.8 on a linux or macos machine together with the dependencies located at `requirements_dev.txt` (optionally within a `virtualenv`).
+Before starting, you need to install python 3.10 on a linux or macos machine together with the dependencies located at `requirements_dev.txt` (optionally within a `virtualenv`).
 
 Parts of the application depends on the following packages that must be installed:
 
